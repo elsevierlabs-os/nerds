@@ -1,0 +1,8 @@
+model_config:
+    crf:
+        c1: 0.1
+        c2: 0.1
+        max_iterations: 100
+ensemble_config:
+    vote: majority
+entity_label: all

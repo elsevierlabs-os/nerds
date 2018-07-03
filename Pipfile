@@ -1,0 +1,32 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+anago = "*"
+future = "*"
+"h5py" = "*"
+hyperopt = "*"
+joblib = "*"
+keras = "*"
+networkx = "==1.11"
+nltk = "*"
+numpy = "*"
+pyahocorasick = "*"
+pyyaml = "*"
+regex = "==2017.4.5"
+scipy = "*"
+sklearn = "*"
+sklearn-crfsuite = "*"
+spacy = "==2.0.11"
+tensorflow = "*"
+nose = "*"
+coverage = "*"
+"flake8" = "*"
+
+[dev-packages]
+nerds = {editable = true, path = "."}
+
+[requires]
+python_version = "3.6"

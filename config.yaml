@@ -1,0 +1,26 @@
+# Default configuration for models
+model_config:
+    crf:
+        c1: 0.1
+        c2: 0.1
+        max_iterations: 100
+    spacy:
+        num_epochs: 20
+        dropout: 0.1
+    bilstm:
+        char_emb_size: 32
+        word_emb_size: 128
+        char_lstm_units: 32
+        word_lstm_units: 128
+        dropout: 0.1
+        batch_size: 16
+        learning_rate: 0.001
+        num_epochs: 10
+
+# Default configuration for ensemble voting
+ensemble_config:
+    # vote: [pooling, majority, weighted]
+    vote: majority
+
+# Label of the entity we're looking for e.g. PERSON, or "all" if we're considering all labels in the dataset.
+entity_label: all
