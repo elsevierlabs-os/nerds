@@ -20,7 +20,8 @@ setup(
         'sklearn',
         'sklearn-crfsuite',
         'spacy==2.0.11',
-        'tensorflow'
+        'tensorflow',
+	'torch'
     ],
     tests_require=[
         'coverage',
