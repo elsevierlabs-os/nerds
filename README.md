@@ -15,9 +15,29 @@ pip3 install pipenv
 
 This will make sure that `pipenv` uses your latest version of Python3, which is hopefully 3.6 or higher. Please refer to the [official website](https://docs.pipenv.org/) for more information on `pipenv`.
 
-A Makefile has been created for convenience, so that you can install the project dependencies, download the required models, test and build the tool easily.
+A Makefile has been created for convenience, so that you can install the project dependencies, download the required models, test and build the tool easily. Note that this is the preferred environment setup approach, the `Pipfile` and `Pipfile.lock` files ensure that you automatically have access to the installed packages in `requirements.txt` after you do a `make install` (see below).
 
-### Makefile specifications
+## Setting up the environment using `conda`
+
+Alternatively, if you are using the [Anaconda distribution of Python](https://www.anaconda.com/), you can also use `conda` to create an environment using the following command:
+
+```
+conda create -n nerds python=3.6 anaconda
+```
+
+You can then enter the newly created conda environment using the following command. After you run the various `make ...` commands, the packages listed in `requirements.txt` and the downloaded models will only be visible inside the `nerds` environment. This approach is usually preferred since it can help prevent version collisions between different environments, at the cost of more disk space.
+
+```
+conda activate nerds
+```
+
+and exit the environment using the following command.
+
+```
+conda deactivate
+```
+
+## Makefile specifications
 
 To install all of the required packages for development and testing run:
 
