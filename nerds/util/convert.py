@@ -100,6 +100,7 @@ def transform_annotated_document_to_bio_format(
 
         tokens += non_tagged_tokens
         labels += non_tagged_labels
+
     return tokens, labels
 
 
@@ -200,6 +201,65 @@ def transform_bio_tags_to_annotated_document(tokens, bio_tags, document):
 
     return AnnotatedDocument(
         document.content, annotations=annotations, encoding=document.encoding)
+
+
+def transform_annotated_documents_to_multiclass_dictionary(
+        annotated_documents, dict_filename, 
+        stopwords=None, write_entity_type=True):
+    """ Convert a collection of AnnotatedDocument objects to (phrase, 
+        entity_type) tuples and writes them out to dict_filename. 
+        
+        Args:
+            annotated_documents -- collection of AnnotatedDocument objects
+            dict_filename -- path to dictionary file to create
+            stopwords -- specify set of phrases (usually english stopwords)
+                that should not be marked up as entities. Default = None
+                implies no stopword filtering
+            write_entity_type -- if True, writes out entities as TSV (phrase,
+                entity_type), else writes out just the phrase, one per line.
+                Former format suitable for ExactMatchMultiClassDictionaryNER,
+                latter format suitable for ExactMatchDictionaryNER.
+
+        Returns:
+            None
+    """
+    
+    fdict = open(dict_filename, "w")
+    for annotated_document in annotated_documents:
+        tokens, tags = transform_annotated_document_to_bio_format(annotated_document)
+        phrase_tokens, prev_tag, already_seen_phrases = [], None, set()
+        for token, tag in zip(tokens, tags):
+            # print("token:", token, "tag:", tag)
+            if tag == "O":
+                if len(phrase_tokens) > 0:
+                    phrase = " ".join(phrase_tokens)
+                    prev_tag = prev_tag[2:]  # remove B_ and I_ prefix
+                    # print("... phrase:", phrase, "tag:", prev_tag)
+                    if phrase not in already_seen_phrases:
+                        if stopwords is not None and phrase not in stopwords:
+                            if write_entity_type:
+                                fdict.write("{:s}\t{:s}\n".format(phrase, prev_tag))
+                            else:
+                                fdict.write("{:s}\n".format(phrase))
+                            already_seen_phrases.add(phrase)
+                    phrase_tokens, prev_tag = [], None
+                continue
+            else:
+                phrase_tokens.append(token)
+                prev_tag = tag
+
+        if len(phrase_tokens) > 0:
+            phrase = " ".join(phrase_tokens)
+            prev_tag = prev_tag[2:]  # remove B_ and I_ prefix
+            # print("... (last) phrase:", phrase, "tag:", prev_tag)
+            if phrase not in already_seen_phrases:
+                if stopwords is not None and phrase not in stopwords:
+                    if write_entity_type:
+                        fdict.write("{:s}\t{:s}\n".format(phrase, prev_tag))
+                    else:
+                        fdict.write("{:s}\n".format(phrase))
+
+    fdict.close()
 
 
 def split_annotated_documents(
