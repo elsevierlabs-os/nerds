@@ -111,6 +111,21 @@ class ExactMatchMultiClassDictionaryNER(NERModel):
 
         self.automaton.make_automaton()
 
+    def fit(self, X, y=None):
+        # Initialize automaton.
+        self.automaton = ahocorasick.Automaton()
+
+        # populate automaton from annotation values provided
+        for annotated_document in X:
+            for annotation in annotated_document.annotations:
+                search_expr = annotation.text
+                entity_type = annotation.label
+                if search_expr != "":
+                    self.automaton.add_word(search_expr, (entity_type, search_expr))
+        log.debug("Successfully loaded dictionary")
+
+        self.automaton.make_automaton()
+
     def transform(self, X, y=None):
         """ Annotates the list of `Document` objects that are provided as
             input and returns a list of `AnnotatedDocument` objects.

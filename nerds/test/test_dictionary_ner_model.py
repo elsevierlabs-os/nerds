@@ -1,6 +1,7 @@
 from nose.tools import assert_equal, assert_in, assert_true
 
-from nerds.core.model.input.document import Document
+from nerds.core.model.input.annotation import Annotation
+from nerds.core.model.input.document import AnnotatedDocument, Document
 from nerds.core.model.ner.dictionary import ExactMatchDictionaryNER
 from nerds.core.model.ner.dictionary import ExactMatchMultiClassDictionaryNER
 
@@ -25,6 +26,7 @@ def test_ExactMatchDictionaryNER():
     assert_in("Springer", unique_annotations)
     assert_in("Wiley", unique_annotations)
 
+
 def test_ExactMatchMultiClassDictionaryNER():
     document = Document(b"""
     In this study , we have used the polymerase chain reaction ( PCR ) with nested 
@@ -44,3 +46,25 @@ def test_ExactMatchMultiClassDictionaryNER():
         assert_equal(annotation.label, expected_labels[i])
 
     
+def test_ExactMatchMultiClassDictionaryNER2():
+    documents = [
+        AnnotatedDocument(b"""
+        In this study , we have used the polymerase chain reaction ( PCR ) with nested 
+        primers to analyze X-inactivation patterns of the HUMARA loci in purified eosinophils 
+        from female patients with eosinophilia .
+        """, annotations= [
+            Annotation("HUMARA loci", "DNA", (139, 150)),
+            Annotation("purified eosinophils", "cell-type", (154, 174))
+        ])]
+    ner = ExactMatchMultiClassDictionaryNER(
+        "nerds/test/data/dictionary/biodictionary.txt")
+    ner.fit(documents)
+    pred_documents = ner.transform(documents)
+    for i, annotation in enumerate(pred_documents[0].annotations):
+        pred_text = annotation.text
+        pred_offsets = annotation.offset
+        label_text = documents[0].plain_text_[pred_offsets[0]:pred_offsets[1]]
+        assert_equal(pred_text, label_text, 
+            "predicted {:s} != label {:s}".format(pred_text, label_text))
+        assert_equal(annotation.label, expected_labels[i])
+
