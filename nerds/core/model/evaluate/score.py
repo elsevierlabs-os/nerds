@@ -63,3 +63,29 @@ def calculate_precision_recall_f1score(y_pred, y_true, entity_label=None):
         (precision + recall) > 0 else 0.
 
     return (precision, recall, f1_score)
+
+
+def classification_report(y_pred, y_true, entity_labels):
+    """ Pretty prints a classification report based on precision, 
+        recall, and f1-scores from `calculate_precision_recall_f1score`
+        for each entity label supplied and the aggregate.
+
+        Args:
+            y_pred (list(AnnotatedDocument)): The predictions of an NER
+                model in the form of a list of annotated documents.
+            y_true (list(AnnotatedDocument)): The ground truth set of
+                annotated documents.
+            entity_labels (list(str)): The entity labels for which
+                the scores are calculated.
+
+        Returns:
+            None
+    """
+    
+    print("                    precision    recall  f1-score")
+    for l in sorted(entity_labels):
+        p, r, f = calculate_precision_recall_f1score(y_pred, y_true, entity_label=l)
+        print("{:20s}    {:.3f}     {:.3f}     {:.3f}".format(l, p, r, f))
+    p, r, f = calculate_precision_recall_f1score(y_pred, y_true)
+    print("")
+    print("{:20s}    {:.3f}     {:.3f}     {:.3f}".format("--all--", p, r, f))
