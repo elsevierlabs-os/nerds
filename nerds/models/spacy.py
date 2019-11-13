@@ -33,7 +33,7 @@ class SpacyNER(NERModel):
             Args:
                 X (list(list(str))): list of tokenized sentences, or list of list
                     of tokens.
-                y (list(list(str))): list of list of IOB tags.
+                y (list(list(str))): list of list of BIO tags.
                 num_epochs (int): number of epochs of training.
                 dropout (float): rate of dropout during training between 0 and 1.
                 batch_size (int): batch size to use during training
@@ -143,7 +143,7 @@ class SpacyNER(NERModel):
 
             Args:
                 tokens (list(str)): list of tokens.
-                labels (list(str)): list of IOB tags.
+                labels (list(str)): list of BIO tags.
 
             Returns:
                 list of tuples in SpaCy format as shown below:
@@ -217,22 +217,22 @@ class SpacyNER(NERModel):
                 Entity(start_char, end_char, label_).
 
             Returns:
-                predictions (list(str)): a list of IOB tags for a single
+                predictions (list(str)): a list of BIO tags for a single
                     sentence.
         """
-        iob_tags, prev_tag = [], None
+        bio_tags, prev_tag = [], None
         entity_dict = self._entities2dict(entities)
         for offset_token in self._tokenize_with_offsets(sent):
             offset, token = offset_token
             if offset in entity_dict:
                 curr_tag = entity_dict[offset]
                 if prev_tag is None or prev_tag != curr_tag:
-                    iob_tags.append("B-" + curr_tag)
+                    bio_tags.append("B-" + curr_tag)
                 else:
-                    iob_tags.append("I-" + curr_tag)
+                    bio_tags.append("I-" + curr_tag)
             else:
                 curr_tag = "O"
-                iob_tags.append("O")
+                bio_tags.append("O")
             prev_tag = curr_tag
-        return iob_tags
+        return bio_tags
 

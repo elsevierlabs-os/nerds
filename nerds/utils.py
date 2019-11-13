@@ -20,7 +20,7 @@ def load_data_and_labels(filepath):
         to be familiar with Anago.
 
         Args:
-            filepath (str): path to the file in IOB format to be loaded.
+            filepath (str): path to the file in BIO format to be loaded.
         
         Returns:
             x (list(str)): list of tokens.
@@ -38,10 +38,10 @@ def flatten_lol(xs, strip_prefix=True):
             xs (list(list(str))): list of list of tags (inner list is sentence).
             strip_prefix (bool): if True, remove leading I- and B-, else retain.
     """
-    def strip_iob_prefix(label):
+    def strip_bio_prefix(label):
         return label.split('-')[-1]
     if strip_prefix:
-        return [strip_iob_prefix(x) for x in itertools.chain.from_iterable(xs)]
+        return [strip_bio_prefix(x) for x in itertools.chain.from_iterable(xs)]
     else:
         return [x for x in itertools.chain.from_iterable(xs)]
 
