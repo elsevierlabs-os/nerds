@@ -21,7 +21,7 @@ dist:
 
 test:
 	make clean_test
-	nosetests --with-coverage --cover-html -s --verbosity=2 --cover-package=nerds
+	nosetests --with-coverage --cover-html -s --verbosity=2 --cover-package=nerds nerds/test/
 
 lint:
 	flake8 --ignore=W605,W504 --verbose nerds

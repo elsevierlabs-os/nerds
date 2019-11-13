@@ -4,6 +4,7 @@ from nerds.models.crf import CrfNER
 from nerds.models.spacy import SpacyNER
 from nerds.models.dictionary import DictionaryNER
 from nerds.models.elmo import ElmoNER
+from nerds.models.ensemble import EnsembleNER
 
 __all__ = [
     "NERModel",
@@ -11,5 +12,6 @@ __all__ = [
     "CrfNER",
     "SpacyNER",
     "BiLstmCrfNER",
-    "ElmoNER"
+    "ElmoNER",
+    "EnsembleNER"
 ]
