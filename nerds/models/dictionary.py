@@ -1,9 +1,8 @@
 from nerds.models import NERModel
 from nerds.utils import get_logger
 
-from sklearn.externals import joblib
-
 import ahocorasick
+import joblib
 import os
 
 log = get_logger()

@@ -1,9 +1,8 @@
 from nerds.models import NERModel
 from nerds.utils import get_logger
 
-from sklearn.externals import joblib
-
 import os
+import joblib
 import sklearn_crfsuite
 import spacy
 
@@ -100,8 +99,9 @@ class CrfNER(NERModel):
         if self.model is None:
             raise ValueError("No model to save, run fit() to train or load() pre-trained model")
 
-        if not os.path.exists(MODEL_DIR):
-            os.makedirs(MODEL_DIR)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+
         model_file = os.path.join(dirpath, "crf-model.pkl")
         joblib.dump(self.model, model_file)
 
