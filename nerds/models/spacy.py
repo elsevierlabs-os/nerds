@@ -134,7 +134,7 @@ class SpacyNER(NERModel):
             raise ValueError("Model directory {:s} not found".format(dirpath))
 
         log.info("Loading model...")
-        self.model = spacy.load(MODEL_DIR)
+        self.model = spacy.load(dirpath)
         return self
 
 
