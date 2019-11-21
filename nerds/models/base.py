@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import accuracy_score
 
-from nerds.utils import flatten_lol
+from nerds.utils import flatten_list
 
 class NERModel(BaseEstimator, ClassifierMixin):
     """ Provides a basic interface to train NER models and annotate documents.
@@ -38,5 +38,5 @@ class NERModel(BaseEstimator, ClassifierMixin):
             method is needed for GridSearch like operations.
         """
         y_pred = self.predict(X)
-        return accuracy_score(flatten_lol(y), flatten_lol(y_pred))
+        return accuracy_score(flatten_list(y), flatten_list(y_pred))
 
