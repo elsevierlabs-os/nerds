@@ -64,7 +64,7 @@ weighted avg       0.87      0.85      0.86     48418
 
 The entity types which have enough examples have good results!
 
-## SpaCy NER (num_epochs=20, dropout=0.1)
+### SpaCy NER (num_epochs=20, dropout=0.1)
 
 ```
               precision    recall  f1-score   support
@@ -84,7 +84,7 @@ weighted avg       0.87      0.85      0.86     48418
 
 ```
 
-## BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, num_epochs=10)
+### BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, num_epochs=10)
 
 ```
               precision    recall  f1-score   support
@@ -104,7 +104,7 @@ weighted avg       0.86      0.85      0.85     48418
 
 ```
 
-## ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, num_epochs=2)
+### ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, num_epochs=2)
 
 ```
               precision    recall  f1-score   support
@@ -124,7 +124,7 @@ weighted avg       0.87      0.87      0.86     48418
 
 ```
 
-## Majority voting ensemble (pretrained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
+### Majority voting ensemble (pretrained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
 
 ```
               precision    recall  f1-score   support
