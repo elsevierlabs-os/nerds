@@ -19,7 +19,7 @@ setup(
         'scipy',
         'sklearn',
         'sklearn-crfsuite',
-        'spacy==2.0.11',
+        'spacy',
         'tensorflow',
 	'torch'
     ],
