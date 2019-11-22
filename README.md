@@ -75,37 +75,48 @@ NERDS is a framework that provides some NER capabilities - among which the optio
 
 ## Understanding the main data exchange classes
 
-There are 3 main classes in the `nerds.core.model.input.*` package that are used in our NER models: `Document`, `Annotation` and `AnnotatedDocument`.
+The NERDS master project on [elsevierlabs-os/nerds](https://github.com/elsevierlabs-os/nerds) project uses a set of custom data exchange classes `Document`, `Annotation`, and `AnnotatedDocument`. The project provided a set of conversion utilities which could be used to convert provided datasets to this format, and convert instances of these classes back to whatever format the underlying wrapped NER model needed. However, this NERDS fork on [sujitpal/nerds](https://github.com/sujitpal/nerds) eliminates this requirement -- the internal format is just a list of list of tokens (words in sentence) or BIO tags. The utility function `nerds.utils.load_data_and_labels` can read a file in ConLL BIO format and convert to this internal format. This decision was made because 3 of the 5 provided models consume the list of list format natively, and the result is fewer lines of extra code and less potential for error.
 
-A `Document` class is the abstract representation of a raw document. It should always implement the `plain_text_` attribute, that returns the plain text representation of the object, as it's the one where we are going to perform NER. Therefore, whenever we want to process any new type of document format - XML, PDF, JSON, brat, etc. - the only requirement is to write an adapter that reads the file(s) from an input directory and transforms them to `Document` objects. The default `Document` object works seamlessly with `.txt` files.
+In general, when given an input format that is not in ConLL BIO format, the main effort in using NERDS would be to convert it to ConLL BIO format. Once that is done, it is relatively easy to ingest it into a data and label structure, as shown below.
 
-The `Annotation` class contains the data for a single annotation. This is the text (e.g. "fox"), the label (e.g. "ANIMAL") and the offsets that correspond to offsets in the `plain_text_` representation of a `Document` (e.g. 40-42).
+```python
+from nerds.utils import load_data_and_labels
 
-> **Important to note**: The offsets is a 2-tuple of integers that represent the position of the first and the last character of the annotation. Be careful, because some libraries end the offset one character **after** the final character i.e. at `start_offset + len(word)`. This is not the case with us, we currently end the offsets at **exactly** the final character i.e. at `start_offset + len(word) - 1`.
+data, labels = load_data_and_labels("nerds/test/data/example.iob")
+print("data:", data)
+print("labels:", labels)
+```
 
-Finally, the `AnnotatedDocument` class is a combination of `Document` and a list of `Annotation`, and it can represent two things:
+yields the following output.
 
-*  Ground truth data (e.g. brat annotation files).
-*  Predictions on documents after they run through our NER models.
-
-The `AnnotatedDocument` class exposes the `annotated_text_` attribute which returns the plain text representation of the document with inline annotations.
+```
+data: [
+  ['Pierre', 'Vinken', ',', '61', 'years', 'old', ',', 'will', 'join', 'the', 'board', 'as', 'a', 'nonexecutive', 'director', 'Nov', '.', '29', '.'], 
+  ['Mr', '.', 'Vinken', 'is', 'chairman', 'of', 'Elsevier', 'N', '.', 'V', '.', ',', 'the', 'Dutch', 'publishing', 'group', '.']
+]
+labels [
+  ['B-PER', 'I-PER', 'O', 'B-DATE', 'I-DATE', 'I-DATE', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-DATE', 'I-DATE', 'I-DATE', 'O'], 
+  ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
+]
+```
 
 ## Extending the base model class
 
-The basic class that every model needs to extend is the `NERModel` class in the `nerds.core.model.ner.base` package. The model class implements a `fit - transform` API, similarly to `sklearn`. To implement a new model, one must extend the following methods at minimum:
+The basic class that every model needs to extend is the `NERModel` class in the `nerds.models` package. The model class implements a `fit - transform` API, similarly to `sklearn`. To implement a new model, one must extend the following methods at minimum:
 
-*  `fit`: Trains a model given a list of `AnnotatedDocument` objects.
-*  `transform`: Gets a list of `Document` objects and transforms them to `AnnotatedDocument`.
+*  `fit`: Trains a model given a list of list of tokens and BIO tags.
+*  `predict`: Returns a list of list of BIO tags, given a list of list of tokens.
 *  `save`: Disk persistence of a model.
 *  `load`: Disk persistence of a model.
 
-Please note that **all** of the class methods, utility functions, etc. should operate on `Document` and `AnnotatedDocument` objects, to maintain compatibility with the rest of the framework. The only exception is "private" methods used internally in classes.
+As a best practice, I like to implement a single NER model as a single file in the `models` folder, but have it be accessible from client code directly as `nerds.models.CustomNER`. You can set this redirection up in `nerds/models/__init__.py`.
 
 # Running experiments
 
-So, let's assume you have a dataset that contains annotated text. If it's in a format that is already supported (e.g. [brat](http://brat.nlplab.org/standoff.html)), then you may just load it into `AnnotatedDocument` objects using the built-in classes. Otherwise, you will have to extend the `nerds.core.model.input.DataInput` class to support the format. Then, you may use the built-in NER models (or create your own) either alone, or in an ensemble and evaluate their predictive capabilities on your dataset.
+There are two examples of running experiments using NERDS. We will continue to update these examples as more functionality becomes available.
 
-In the `nerds.core.model.evaluate` package, there are helper methods and classes to perform k-fold cross-validation. Please, refer to the `nerds.examples` package where you may look at working code examples with real datasets.
+* [examples/GMB](examples/GMB)
+* [examples/BioNLP](examples/BioNLP)
 
 # Contributing to the project
 
@@ -116,4 +127,7 @@ New models and input adapters are always welcome. Please make sure your code is 
 
 The [CONTRIBUTING.md file](docs/CONTRIBUTING.md) lists contributors who have contributed to the [NERDS (elsevierlabs-os/nerds)](https://github.com/elsevierlabs-os/nerds) project.
 
+# Changes / Improvements in this Fork
+
+The [CHANGES.md file](docs/CHANGES.md) lists the changes and improvements that were made in this fork.
 
