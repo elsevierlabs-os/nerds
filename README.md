@@ -1,5 +1,5 @@
 # nerds
-![nerds logo](nerds.png)
+![nerds logo](docs/nerds.png)
 
 # How to set up a DEV environment
 
@@ -113,3 +113,7 @@ New models and input adapters are always welcome. Please make sure your code is 
 
 * `make test` shows that all the unit test pass.
 * `make lint` shows no Python code violations.
+
+The [CONTRIBUTING.md file](docs/CONTRIBUTING.md) lists contributors who have contributed to the [NERDS (elsevierlabs-os/nerds)](https://github.com/elsevierlabs-os/nerds) project.
+
+
