@@ -131,3 +131,4 @@ print(classification_report(flatten_list(ytest, strip_prefix=True),
 # clean up
 shutil.rmtree("models")
 os.remove("train.iob")
+os.remove("glove.6B.100d.txt")
