@@ -150,8 +150,9 @@ class DictionaryNER(NERModel):
                 matched_phrases (list(str)): list of matched phrases, updated
                     in place by function.
         """
+        # print(start_index, end_index, tag, sentence, len(sentence))
         if start_index == 0:
-            if end_index < len(sentence):
+            if end_index + 1 < len(sentence):
                 if sentence[end_index + 1] == " ":
                     matched_phrases.append((start_index, end_index + 1, tag))
         elif end_index + 1 == len(sentence):

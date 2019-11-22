@@ -41,11 +41,10 @@ class ElmoNER(NERModel):
             fc_dim=100,
             dropout=0.5,
             embeddings=None,
-            embeddings_file=None,
-            embeddings_dim=None,
+            embeddings_file="glove.6B.100d.txt",
             batch_size=16, 
             learning_rate=0.001, 
-            num_epochs=10):
+            num_epochs=2):
         """ Trains the NER model. Input is list of AnnotatedDocuments.
 
             Args:
@@ -59,7 +58,6 @@ class ElmoNER(NERModel):
                 dropout (float): dropout rate.
                 embeddings (numpy array): word embedding matrix.
                 embeddings_file (str): path to embedding file.
-                embeddings_dim (int): size of embedding vector.
                 use_char (boolean): add char feature.
                 use_crf (boolean): use crf as last layer.
                 batch_size training batch size.
@@ -75,6 +73,7 @@ class ElmoNER(NERModel):
 
         if embeddings is None:
             embeddings = load_glove(embeddings_file)
+            embeddings_dim != embeddings[list(embeddings.keys())[0]].shape[0]
             embeddings = filter_embeddings(embeddings, 
                 self.preprocessor._word_vocab.vocab, 
                 embeddings_dim)

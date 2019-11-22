@@ -1,111 +1,133 @@
-import random
+import csv
+import os
 import shutil
 
-from nerds.core.model.ner.crf import CRF
-from nerds.core.model.ner.spacy import SpaCyStatisticalNER
-from nerds.core.model.ner.bilstm import BidirectionalLSTM
-from nerds.core.model.ner.ensemble import (
-    NERModelEnsembleMajorityVote, NERModelEnsemblePooling)
-from nerds.core.model.eval.score import calculate_precision_recall_f1score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+from sklearn.utils import shuffle
 
-from read_data import data_to_annotated_docs
+from nerds.models import (
+    DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, ElmoNER, EnsembleNER
+)
+from nerds.utils import *
 
-X = data_to_annotated_docs()
-print("Loaded data: ", len(X), "data points")
-random.Random(42).shuffle(X)
+def convert_to_iob_format(input_file, output_file):
+    num_written = 0
+    fout = open(output_file, "w")
+    with open(input_file, "r", encoding="iso-8859-1") as fin:
+        csv_reader = csv.reader(fin, delimiter=',', quotechar='"')
+        # skip header
+        next(csv_reader)
+        for line in csv_reader:
+            sid, token, pos, tag = line
+            if num_written > 0:
+                if len(sid) != 0:
+                    # end of sentence marker
+                    fout.write("\n")
+            fout.write("\t".join([token, tag]) + "\n")
+            num_written += 1
 
-entity_names = ['art', 'org', 'geo', 'nat', 'gpe', 'per', 'eve', 'tim']
-print("All labels: ", entity_names)
+    fout.write("\n")
+    fout.close()
 
-train_test_split = 0.8
-train_X = X[:int(0.8 * len(X))]
-test_X = X[int(0.8 * len(X)):]
-print("Training: ", len(train_X))
-print("Training: ", len(test_X))
+# convert Kaggle dataset to our standard IOB format
+if not os.path.exists("train.iob"):
+    convert_to_iob_format("train.csv", "train.iob")
 
+# these are our entities
+entity_labels = ["art", "eve", "geo", "gpe", "nat", "org", "per", "tim"]
 
-def test_CRF():
-    crf_model = CRF()
-    crf_model.fit(train_X[:5000])
+# make model directory to store our models
+if not os.path.exists("models"):
+    os.makedirs("models")
 
-    X_pred = crf_model.transform(test_X)
+# read IOB file 
+data, labels = load_data_and_labels("train.iob")
+# optional: restrict dataset to 5000 sentences
+# data_s, labels_s = shuffle(data, labels, random_state=42)
+# data = data_s
+# labels = labels_s
+print(len(data), len(labels))
 
-    for l in entity_names:
-        p, r, f = calculate_precision_recall_f1score(X_pred,
-                                                     test_X,
-                                                     entity_label=l)
-        print("Label: ", l, p, r, f)
+# split into train and test set
+xtrain, xtest, ytrain, ytest = train_test_split(data, labels, 
+    test_size=0.3, random_state=42)
+print(len(xtrain), len(ytrain), len(xtest), len(ytest))
 
-    # Save for ensemble usage to avoid training again.
-    crf_model.save("tmp")
+# train and test the dictionary NER
+model = DictionaryNER()
+model.fit(xtrain, ytrain)
+model.save("models/dict_model")
+trained_model = model.load("models/dict_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
+# train and test the CRF NER
+model = CrfNER()
+model.fit(xtrain, ytrain)
+model.save("models/crf_model")
+trained_model = model.load("models/crf_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-def test_spacy():
-    spacy_model = SpaCyStatisticalNER()
-    # Using the entire dataset will make Spacy die!
-    spacy_model.fit(train_X[:5000])
+# train and test the SpaCy NER
+model = SpacyNER()
+model.fit(xtrain, ytrain)
+model.save("models/spacy_model")
+trained_model = model.load("models/spacy_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-    X_pred = spacy_model.transform(test_X)
+# train and test the BiLSTM-CRF NER
+model = BiLstmCrfNER()
+model.fit(xtrain, ytrain)
+model.save("models/bilstm_model")
+trained_model = model.load("models/bilstm_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-    for l in entity_names:
-        p, r, f = calculate_precision_recall_f1score(X_pred,
-                                                     test_X,
-                                                     entity_label=l)
-        print("Label: ", l, p, r, f)
+# train and test the ELMo NER
+if os.path.exists("glove.6B.100d.txt"):
+    model = ElmoNER()
+    model.fit(xtrain, ytrain)
+    model.save("models/elmo_model")
+    trained_model = model.load("models/elmo_model")
+    ypred = trained_model.predict(xtest)
+    print(classification_report(flatten_list(ytest, strip_prefix=True),
+                                flatten_list(ypred, strip_prefix=True),
+                                labels=entity_labels))
 
-    # Save for ensemble usage to avoid training again.
-    spacy_model.save("tmp")
+# create and test an ensemble
+dict_model = DictionaryNER()
+dict_model.load("models/dict_model")
+crf_model = CrfNER()
+crf_model.load("models/crf_model")
+spacy_model = SpacyNER()
+spacy_model.load("models/spacy_model")
+bilstm_model = BiLstmCrfNER()
+bilstm_model.load("models/bilstm_model")
+model = EnsembleNER()
+model.fit(xtrain, ytrain, 
+    estimators=[
+        (dict_model, {}),
+        (crf_model, {}),
+        (spacy_model, {}),
+        (bilstm_model, {})
+    ],
+    is_pretrained=True)
+ypred = model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-
-def test_LSTM():
-    lstm_model = BidirectionalLSTM()
-    lstm_model.fit(train_X[:5000])
-
-    X_pred = lstm_model.transform(test_X)
-
-    for l in entity_names:
-        p, r, f = calculate_precision_recall_f1score(X_pred,
-                                                     test_X,
-                                                     entity_label=l)
-        print("Label: ", l, p, r, f)
-
-    # Save for ensemble usage to avoid training again.
-    lstm_model.save("tmp")
-
-
-def test_ensembles():
-    lstm_model = BidirectionalLSTM()
-    lstm_model.load("tmp")
-    spacy_model = SpaCyStatisticalNER()
-    spacy_model.load("tmp")
-    crf_model = CRF()
-    crf_model.load("tmp")
-
-    models = [lstm_model, crf_model, spacy_model]
-    ens1 = NERModelEnsembleMajorityVote(models)
-    ens2 = NERModelEnsemblePooling(models)
-
-    X_pred_1 = ens1.transform(test_X)
-    print("Majority Vote: \n")
-    for l in entity_names:
-        p, r, f = calculate_precision_recall_f1score(X_pred_1,
-                                                     test_X,
-                                                     entity_label=l)
-        print("Label: ", l, p, r, f)
-
-    X_pred_2 = ens2.transform(test_X)
-    print("Pooling: \n")
-    for l in entity_names:
-        p, r, f = calculate_precision_recall_f1score(X_pred_2,
-                                                     test_X,
-                                                     entity_label=l)
-        print("Label: ", l, p, r, f)
-
-
-test_LSTM()
-test_CRF()
-test_spacy()
-test_ensembles()
-
-# Clean-up the model dirs.
-shutil.rmtree("tmp/")
+# clean up
+shutil.rmtree("models")
+os.remove("train.iob")

@@ -1,109 +1,144 @@
 # Dataset description
 
-Annotated Corpus for Named Entity Recognition using GMB (Groningen Meaning Bank) corpus for entity classification with enhanced and popular features by Natural Language Processing applied to the data set.
+Annotated Corpus for Named Entity Recognition using GMB (Groningen Meaning Bank) corpus for entity classification with enhanced and popular features by Natural Language Processing applied to the data set. Downloaded from [Kaggle](https://www.kaggle.com/abhinavwalia95/entity-annotated-corpus) to `train.csv` file locally.
 
-# Source
+In addition, [GloVe (Global Vectors for Word Representation) vectors](https://nlp.stanford.edu/projects/glove/) are needed to run the ElmoNER model, please download them by running the provided `download_glove.sh` script.
 
-Downloaded from [Kaggle](https://www.kaggle.com/abhinavwalia95/entity-annotated-corpus)
+## Overall number of entities
 
-# Overall number of entities
-
-```python
-{'O': 1146068',
- 'geo-nam': 58388,
- 'org-nam': 48034,
- 'per-nam': 23790,
- 'gpe-nam': 20680,
- 'tim-dat': 12786,
- 'tim-dow': 11404,
- 'per-tit': 9800,
- 'per-fam': 8152,
- 'tim-yoc': 5290,
- 'tim-moy': 4262,
- 'per-giv': 2413,
- 'tim-clo': 891,
- 'art-nam': 866,
- 'eve-nam': 602,
- 'nat-nam': 300,
- 'tim-nam': 146,
- 'eve-ord': 107,
- 'per-ini': 60,
- 'org-leg': 60,
- 'per-ord': 38,
- 'tim-dom': 10,
- 'per-mid': 1,
- 'art-add': 1}
+```
+    699 art
+    561 eve
+  45058 geo
+  16068 gpe
+    252 nat
+  36927 org
+  34241 per
+  26861 tim
 ```
 
 ## Training
 
-To keep the training time reasonable, we shuffle the sentences from the dataset (with a fixed seed) and train with only the first 5000 instances.
+We train with the full set of data, and the entire run across all the provided models can be fairly time consuming. If it is desired to keep the training time reasonable, you can train only with 5000 sentences by uncommenting lines 47-49 in `test_models.py`.
 
 ## Results
 
-### CRF (max_iterations=100, c1=0.1, c2=0.1)
+### Dictionary NER 
 
 ```
-Label:  art 0.1875              0.0410958904109589  0.06741573033707865
-Label:  org 0.696551724137931   0.6350665054413543  0.6643896268184694
-Label:  geo 0.763373190685966   0.7818744359932964  0.7725130556616991
-Label:  nat 0.23076923076923078 0.07317073170731707 0.1111111111111111
-Label:  gpe 0.9410415984277759  0.9048818897637795  0.9226075786769428
-Label:  per 0.7281134401972873  0.7013064133016627  0.7144585601935873
-Label:  eve 0.5348837209302325  0.3709677419354839  0.4380952380952381
-Label:  tim 0.887613454351308   0.8149509803921569  0.849731663685152
+              precision    recall  f1-score   support
+
+         art       0.01      0.15      0.02       215
+         eve       0.22      0.43      0.29       169
+         geo       0.35      0.74      0.48     13724
+         gpe       0.93      0.90      0.92      4850
+         nat       0.27      0.53      0.36        94
+         org       0.41      0.67      0.51     10884
+         per       0.77      0.74      0.75     10342
+         tim       0.14      0.92      0.25      8140
+
+   micro avg       0.32      0.77      0.45     48418
+   macro avg       0.39      0.64      0.45     48418
+weighted avg       0.48      0.77      0.55     48418
+```
+
+### CRF NER (max_iterations=100, c1=0.1, c2=0.1)
+
+```
+              precision    recall  f1-score   support
+
+         art       0.28      0.05      0.08       215
+         eve       0.54      0.33      0.41       169
+         geo       0.87      0.89      0.88     13724
+         gpe       0.95      0.92      0.94      4850
+         nat       0.71      0.32      0.44        94
+         org       0.80      0.78      0.79     10884
+         per       0.88      0.88      0.88     10342
+         tim       0.93      0.87      0.90      8140
+
+   micro avg       0.87      0.85      0.86     48418
+   macro avg       0.74      0.63      0.66     48418
+weighted avg       0.87      0.85      0.86     48418
+
 ```
 
 The entity types which have enough examples have good results!
 
-## Spacy (num_epochs=20, dropout=0.1)
+## SpaCy NER (num_epochs=20, dropout=0.1)
 
 ```
-Label:  art 0.09090909090909091 0.0410958904109589  0.056603773584905655
-Label:  org 0.6371129427489418  0.6756437514764942  0.6558128869525338
-Label:  geo 0.8506005015177511  0.8454676636494818  0.8480263157894736
-Label:  nat 0.3333333333333333  0.075               0.12244897959183673
-Label:  gpe 0.9200373366521468  0.9295818924866395  0.9247849882720875
-Label:  per 0.7063857801184991  0.6349112426035503  0.6687441570582736
-Label:  eve 0.625               0.24193548387096775 0.3488372093023256
-Label:  tim 0.8101326899879373  0.8220318237454101  0.8160388821385176
-```
+              precision    recall  f1-score   support
 
-## BiLSTM-CRF (char_emb_size=32, word_emb_size=128, char_lstm_units=32, word_lstm_units=128, dropout=0.1, batch_size=16, learning_rate=0.001, num_epochs=10)
+         art       0.26      0.07      0.10       215
+         eve       0.61      0.24      0.34       169
+         geo       0.87      0.87      0.87     13724
+         gpe       0.94      0.93      0.93      4850
+         nat       0.87      0.28      0.42        94
+         org       0.79      0.77      0.78     10884
+         per       0.85      0.90      0.88     10342
+         tim       0.96      0.83      0.89      8140
 
-```
-Label:  art 0.05714285714285714 0.0273972602739726  0.037037037037037035
-Label:  org 0.29821791112113694 0.31824747231584016 0.3079073017351811
-Label:  geo 0.6431408898305084  0.6262248581743166  0.634570159393781
-Label:  nat 0.0                 0.0                 0.0
-Label:  gpe 0.890119760479042   0.9167437557816837  0.9032356068661704
-Label:  per 0.1862842070557204  0.15786532550991897 0.17090139140955837
-Label:  eve 0.3870967741935484  0.1935483870967742  0.25806451612903225
-Label:  tim 0.7139974779319042  0.671967718965108   0.6923453167033504
-```
-
-## Pooling ensemble
+   micro avg       0.87      0.85      0.86     48418
+   macro avg       0.77      0.61      0.65     48418
+weighted avg       0.87      0.85      0.86     48418
 
 ```
-Label:  art 0.0759493670886076  0.0821917808219178  0.07894736842105263
-Label:  org 0.398450340455506   0.7880195031344324  0.5292787524366471
-Label:  geo 0.6124665775401069  0.9238719435341568  0.7366093859913576
-Label:  nat 0.19230769230769232 0.125               0.15151515151515152
-Label:  gpe 0.830937167199148   0.9550183598531212  0.8886674259681092
-Label:  per 0.43697978596908443 0.813503043718871   0.5685554051440727
-Label:  eve 0.37142857142857144 0.41935483870967744 0.393939393939394
-Label:  tim 0.6545580349420516  0.888262910798122   0.7537097898615676
-```
 
-## Majority voting ensemble
+## BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, num_epochs=10)
 
 ```
-Label:  art 0.4                0.0273972602739726   0.05128205128205128
-Label:  org 0.7885109114249037 0.5937651039149348   0.6774193548387097
-Label:  geo 0.882788868723533  0.7560880829015544   0.814540887524421
-Label:  nat 1.0                0.024390243902439025 0.047619047619047616
-Label:  gpe 0.9580103359173127 0.9286161552911709   0.9430842607313196
-Label:  per 0.8227743271221533 0.5885663507109005   0.686237264721119
-Label:  eve 0.8421052631578947 0.25806451612903225  0.3950617283950617
-Label:  tim 0.9210599721059972 0.80615234375        0.8597838823069914
+              precision    recall  f1-score   support
+
+         art       0.25      0.09      0.14       215
+         eve       0.37      0.29      0.33       169
+         geo       0.84      0.89      0.87     13724
+         gpe       0.95      0.93      0.94      4850
+         nat       0.71      0.31      0.43        94
+         org       0.84      0.72      0.77     10884
+         per       0.87      0.90      0.89     10342
+         tim       0.89      0.89      0.89      8140
+
+   micro avg       0.86      0.85      0.86     48418
+   macro avg       0.72      0.63      0.66     48418
+weighted avg       0.86      0.85      0.85     48418
+
+```
+
+## ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, num_epochs=2)
+
+```
+              precision    recall  f1-score   support
+
+         art       0.13      0.15      0.14       215
+         eve       0.35      0.46      0.40       169
+         geo       0.88      0.89      0.88     13724
+         gpe       0.94      0.94      0.94      4850
+         nat       0.71      0.21      0.33        94
+         org       0.82      0.76      0.79     10884
+         per       0.86      0.93      0.89     10342
+         tim       0.91      0.88      0.90      8140
+
+   micro avg       0.87      0.87      0.87     48418
+   macro avg       0.70      0.65      0.66     48418
+weighted avg       0.87      0.87      0.86     48418
+
+```
+
+## Majority voting ensemble (pretrained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
+
+```
+              precision    recall  f1-score   support
+
+         art       0.17      0.08      0.11       215
+         eve       0.47      0.22      0.30       169
+         geo       0.83      0.87      0.85     13724
+         gpe       0.98      0.89      0.93      4850
+         nat       0.76      0.31      0.44        94
+         org       0.84      0.64      0.73     10884
+         per       0.93      0.71      0.81     10342
+         tim       0.90      0.86      0.88      8140
+
+   micro avg       0.87      0.78      0.82     48418
+   macro avg       0.73      0.57      0.63     48418
+weighted avg       0.87      0.78      0.82     48418
 ```
