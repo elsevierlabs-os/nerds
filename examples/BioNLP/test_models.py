@@ -22,56 +22,56 @@ print(len(xtrain), len(ytrain), len(xtest), len(xtest))
 if not os.path.exists("models"):
     os.makedirs("models")
 
-# # train and test the Dictionary NER
-# model = DictionaryNER()
-# model.fit(xtrain, ytrain)
-# model.save("models/dict_model")
-# trained_model = model.load("models/dict_model")
-# ypred = trained_model.predict(xtest)
-# print(classification_report(flatten_list(ytest, strip_prefix=True),
-#                             flatten_list(ypred, strip_prefix=True),
-#                             labels=entity_labels))
+# train and test the Dictionary NER
+model = DictionaryNER()
+model.fit(xtrain, ytrain)
+model.save("models/dict_model")
+trained_model = model.load("models/dict_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-# # train and test the CRF NER
-# model = CrfNER()
-# model.fit(xtrain, ytrain)
-# model.save("models/crf_model")
-# trained_model = model.load("models/crf_model")
-# ypred = trained_model.predict(xtest)
-# print(classification_report(flatten_list(ytest, strip_prefix=True),
-#                             flatten_list(ypred, strip_prefix=True),
-#                             labels=entity_labels))
+# train and test the CRF NER
+model = CrfNER()
+model.fit(xtrain, ytrain)
+model.save("models/crf_model")
+trained_model = model.load("models/crf_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-# # train and test the SpaCy NER
-# model = SpacyNER()
-# model.fit(xtrain, ytrain)
-# model.save("models/spacy_model")
-# trained_model = model.load("models/spacy_model")
-# ypred = trained_model.predict(xtest)
-# print(classification_report(flatten_list(ytest, strip_prefix=True),
-#                             flatten_list(ypred, strip_prefix=True),
-#                             labels=entity_labels))
+# train and test the SpaCy NER
+model = SpacyNER()
+model.fit(xtrain, ytrain)
+model.save("models/spacy_model")
+trained_model = model.load("models/spacy_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-# # train and test the BiLSTM-CRF NER
-# model = BiLstmCrfNER()
-# model.fit(xtrain, ytrain)
-# model.save("models/bilstm_model")
-# trained_model = model.load("models/bilstm_model")
-# ypred = trained_model.predict(xtest)
-# print(classification_report(flatten_list(ytest, strip_prefix=True),
-#                             flatten_list(ypred, strip_prefix=True),
-#                             labels=entity_labels))
+# train and test the BiLSTM-CRF NER
+model = BiLstmCrfNER()
+model.fit(xtrain, ytrain)
+model.save("models/bilstm_model")
+trained_model = model.load("models/bilstm_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
-# # train and test the ELMo NER
-# if os.path.exists("glove.6B.100d.txt"):
-#     model = ElmoNER()
-#     model.fit(xtrain, ytrain)
-#     model.save("models/elmo_model")
-#     trained_model = model.load("models/elmo_model")
-#     ypred = trained_model.predict(xtest)
-#     print(classification_report(flatten_list(ytest, strip_prefix=True),
-#                                 flatten_list(ypred, strip_prefix=True),
-#                                 labels=entity_labels))
+# train and test the ELMo NER
+if os.path.exists("glove.6B.100d.txt"):
+    model = ElmoNER()
+    model.fit(xtrain, ytrain)
+    model.save("models/elmo_model")
+    trained_model = model.load("models/elmo_model")
+    ypred = trained_model.predict(xtest)
+    print(classification_report(flatten_list(ytest, strip_prefix=True),
+                                flatten_list(ypred, strip_prefix=True),
+                                labels=entity_labels))
 
 # create and test an ensemble
 dict_model = DictionaryNER()
@@ -96,7 +96,7 @@ print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),
                             labels=entity_labels))
 
-# # clean up
-# shutil.rmtree("models")
-# shutil.rmtree("data")
-# os.remove("glove.6B.100d.txt")
+# clean up
+shutil.rmtree("models")
+shutil.rmtree("data")
+os.remove("glove.6B.100d.txt")
