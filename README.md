@@ -102,14 +102,14 @@ labels [
 
 ## Extending the base model class
 
-The basic class that every model needs to extend is the `NERModel` class in the `nerds.models` package. The model class implements a `fit - transform` API, similarly to `sklearn`. To implement a new model, one must extend the following methods at minimum:
+The basic class that every model needs to extend is the `NERModel` class in the `nerds.models` package. The model class implements a `fit - predict` API, similarly to `sklearn`. To implement a new model, one must extend the following methods at minimum:
 
-*  `fit`: Trains a model given a list of list of tokens and BIO tags.
-*  `predict`: Returns a list of list of BIO tags, given a list of list of tokens.
-*  `save`: Disk persistence of a model.
-*  `load`: Disk persistence of a model.
+*  `fit(X, y)`: Trains a model given a list of list of tokens X and BIO tags y.
+*  `predict(X)`: Returns a list of list of BIO tags, given a list of list of tokens X.
+*  `save(dirpath)`: Saves model to directory given by dirpath.
+*  `load(dirpath)`: Retrieves model from directory given by dirpath.
 
-As a best practice, I like to implement a single NER model as a single file in the `models` folder, but have it be accessible from client code directly as `nerds.models.CustomNER`. You can set this redirection up in `nerds/models/__init__.py`.
+As a best practice, I like to implement a single NER model (or group of related NER models) as a single file in the `models` folder, but have it be accessible from client code directly as `nerds.models.CustomNER`. You can set this redirection up in `nerds/models/__init__.py`.
 
 # Running experiments
 
