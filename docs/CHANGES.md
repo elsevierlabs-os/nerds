@@ -3,6 +3,7 @@
 ## Completed
 
 * Replace AnnotatedDocument common data format to List of List format borrowed from Anago.
+* Removes dependency on NLTK
 * Model
   * NERModel -- base class extends ClassifierMixin, so exposes predict() instead of transform().
   * DictionaryNER

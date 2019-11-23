@@ -3,7 +3,6 @@ install:
 
 download_models:
 	python -m spacy download en
-	python -m nltk.downloader averaged_perceptron_tagger
 
 clean:
 	-rm -rf build

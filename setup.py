@@ -4,6 +4,7 @@ setup(
     name="nerds",
     author="Elsevier Content & Innovation",
     install_requires=[
+        'allennlp',
         'anago',
         'future',
         'h5py',
@@ -11,7 +12,6 @@ setup(
         'joblib',
         'keras',
         'networkx==1.11',
-        'nltk',
         'numpy',
         'pyahocorasick',
         'pyyaml',
@@ -21,7 +21,8 @@ setup(
         'sklearn-crfsuite',
         'spacy',
         'tensorflow',
-	'torch'
+	'torch',
+        'transformers'
     ],
     tests_require=[
         'coverage',
