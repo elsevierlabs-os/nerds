@@ -23,6 +23,7 @@ def test_flatten_and_unflatten_list():
     assert_equal(len(y), len(y_unflat), "Reconstructed y (y_unflat) should be identical to y")
     assert_equal(len(y[0]), len(y_unflat[0]), "Reconstructed y (y_unflat) should be identical to y")
 
+
 def test_tokens_to_spans():
     data, labels = load_data_and_labels("nerds/test/data/example.iob")
     tokens, tags = data[0], labels[0]
@@ -40,6 +41,7 @@ def test_tokens_to_spans():
     assert_equal(78, spans[2][0], "spans[2].start should be 78")
     assert_equal(86, spans[2][1], "spans[2].end should be 86")
     assert_equal("DATE", spans[2][2], "spans[2].cls should be DATE")
+
 
 def test_spans_to_tokens():
     sentence = "Mr . Vinken is chairman of Elsevier N . V . , the Dutch publishing group ."
