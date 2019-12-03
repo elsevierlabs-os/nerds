@@ -27,7 +27,7 @@ def test_flatten_and_unflatten_list():
 def test_tokens_to_spans():
     data, labels = load_data_and_labels("nerds/test/data/example.iob")
     tokens, tags = data[0], labels[0]
-    sentence, spans = tokens_to_spans(tokens, tags)
+    sentence, spans = tokens_to_spans(tokens, tags, merged=True)
     assert_equal(
         "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov . 29 .",
         sentence, "Sentence reconstruction is incorrect")
@@ -46,7 +46,7 @@ def test_tokens_to_spans():
 def test_spans_to_tokens():
     sentence = "Mr . Vinken is chairman of Elsevier N . V . , the Dutch publishing group ."
     spans = [(0, 11, "PER"), (27, 43, "ORG"), (50, 55, "NORP")]
-    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm)
+    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, merged=True)
     # reference tokens and tags for comparison
     data, labels = load_data_and_labels("nerds/test/data/example.iob")
     ref_tokens, ref_tags = data[1], labels[1]
@@ -56,3 +56,13 @@ def test_spans_to_tokens():
     assert_equal(len(tags), len(ref_tags), "Number of BIO tags should be identical")
     for tag, ref_tag in zip(tags, ref_tags):
         assert_equal(ref_tag, tag, "Tags do not match. {:s} != {:s}".format(ref_tag, tag))
+
+
+def test_spans_to_tokens_unmerged():
+    sentence = "Mr . Vinken is chairman of Elsevier N . V . , the Dutch publishing group ."
+    spans = [(0, 2, 'PER'), (3, 4, 'PER'), (5, 11, 'PER'), (27, 35, 'ORG'), (36, 37, 'ORG'), (38, 39, 'ORG'), (40, 41, 'ORG'), (42, 43, 'ORG'), (50, 55, 'NORP')]
+    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, merged=False)
+    ref_preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
+    for ref_pred, pred in zip(ref_preds, tags):
+        assert_equal(ref_pred, pred, "Tags do not match. {:s} != {:s}".format(ref_pred, pred))
+

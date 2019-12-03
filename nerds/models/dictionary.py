@@ -1,9 +1,10 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, spans_to_tokens
 
 import ahocorasick
 import joblib
 import os
+import spacy
 
 log = get_logger()
 
@@ -13,6 +14,7 @@ class DictionaryNER(NERModel):
         super().__init__(entity_label)
         self.key = "aho-corasick-dict-ner"
         self.model = None
+        self.spacy_lm = spacy.load("en")
 
 
     def fit(self, X, y,
@@ -77,7 +79,7 @@ class DictionaryNER(NERModel):
             # remove subsumed phrases
             longest_phrases = self._remove_subsumed_matches(matched_phrases, 1)
             # convert longest matches to IOB format
-            pred = self._convert_matches_to_iob_tags(tokens, longest_phrases)
+            _, pred = spans_to_tokens(sent, longest_phrases, self.spacy_lm)
             predictions.append(pred)
 
         return predictions
@@ -150,7 +152,6 @@ class DictionaryNER(NERModel):
                 matched_phrases (list(str)): list of matched phrases, updated
                     in place by function.
         """
-        # print(start_index, end_index, tag, sentence, len(sentence))
         if start_index == 0:
             if end_index + 1 < len(sentence):
                 if sentence[end_index + 1] == " ":
@@ -193,41 +194,3 @@ class DictionaryNER(NERModel):
             else:
                 longest_matches.append(phrase)
         return self._remove_subsumed_matches(longest_matches, k+1)
-
-
-    def _convert_matches_to_iob_tags(self, tokens, matched_phrases):
-        """ Merges the longest matches with the original tokens to 
-            produce a list of IOB tags for the sentence.
-
-            Args:
-                tokens (list(str)): list of tokens for the sentence.
-                matched_phrase (list((start, end, tag))): list of longest
-                    matched phrase tuples.
-
-            Returns:
-                iob_tags (list(str)): list of IOB tags, each tag 
-                    corresponds to a word token.
-        """
-        iob_tags = []
-        curr_offset = 0
-        prev_label = "O"
-        for token in tokens:
-            start_offset = curr_offset
-            end_offset = start_offset + len(token)
-            token_matched = False
-            matched_label = None
-            for phrase_start, phrase_end, phrase_label in matched_phrases:
-                if start_offset >= phrase_start and end_offset <= phrase_end:
-                    token_matched = True
-                    matched_label = phrase_label
-                    break
-            if token_matched:
-                iob_tags.append(
-                    "I-" + phrase_label if prev_label == phrase_label 
-                    else "B-" + phrase_label)
-                prev_label = phrase_label
-            else:
-                iob_tags.append("O")            
-                prev_label = "O"
-            curr_offset = end_offset + 1
-        return iob_tags

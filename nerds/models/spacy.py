@@ -1,5 +1,5 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, spans_to_tokens, tokens_to_spans
 
 from spacy.util import minibatch
 
@@ -22,6 +22,7 @@ class SpacyNER(NERModel):
         super().__init__(entity_label)
         self.key = "spacy_ner"
         self.model = None
+        self.spacy_lm = spacy.load("en")
 
 
     def fit(self, X, y,
@@ -100,8 +101,7 @@ class SpacyNER(NERModel):
         for sent_tokens in X:
             sent = " ".join(sent_tokens)
             doc = self.model(sent)
-            entities = [(e.start_char, e.end_char, e.label_) for e in doc.ents]
-            sent_preds = self._convert_from_spacy(sent, entities)
+            sent_preds = self._convert_from_spacy(sent, doc.ents)
             preds.append(sent_preds)
 
         return preds
@@ -157,55 +157,8 @@ class SpacyNER(NERModel):
                     }
                 )
         """
-        content = " ".join(tokens)
-        offsets, current_offset = [], 0
-        for token, label in zip(tokens, labels):
-            start_offset = current_offset
-            end_offset = start_offset + len(token)
-            if label != "O":
-                offsets.append((start_offset, end_offset, label.split("-")[-1]))
-            current_offset = end_offset + 1 # skip space
-        return (content, {"entities": offsets})
-
-
-    def _entities2dict(self, entities):
-        """ Convert entities returned from SpaCy into a dictionary keyed by
-            offset pair. This allows predicted entities to be looked up quickly
-            and the appropriate tag populated in _convert_from_spacy().
-            
-            Args:
-                entities (list((begin, end, label))): list of label predictions.
-
-            Return:
-                entity_dict (dict{(begin, end): label})
-        """
-        entity_dict = {}
-        for begin, end, label in entities:
-            key = ":".join([str(begin), str(end)])
-            entity_dict[key] = label
-        return entity_dict
-
-
-    def _tokenize_with_offsets(self, sent):
-        """ Tokenize a sentence by space, and write out tuples that include
-            offsets for each token.
-
-            Args:
-                sent (str): sentence as a string.
-            
-            Returns:
-                offsets (list((start, end), token)): list of tokens with 
-                    offset information.
-        """
-        tokens = sent.split()
-        offsets, curr_offset = [], 0
-        for token in tokens:
-            begin = curr_offset
-            end = begin + len(token)
-            key = ":".join([str(begin), str(end)])
-            offsets.append((key, token))
-            curr_offset = end + 1
-        return offsets
+        sentence, spans = tokens_to_spans(tokens, labels, merged=False)
+        return (sentence, {"entities": spans})
 
 
     def _convert_from_spacy(self, sent, entities):
@@ -220,19 +173,7 @@ class SpacyNER(NERModel):
                 predictions (list(str)): a list of BIO tags for a single
                     sentence.
         """
-        bio_tags, prev_tag = [], None
-        entity_dict = self._entities2dict(entities)
-        for offset_token in self._tokenize_with_offsets(sent):
-            offset, token = offset_token
-            if offset in entity_dict:
-                curr_tag = entity_dict[offset]
-                if prev_tag is None or prev_tag != curr_tag:
-                    bio_tags.append("B-" + curr_tag)
-                else:
-                    bio_tags.append("I-" + curr_tag)
-            else:
-                curr_tag = "O"
-                bio_tags.append("O")
-            prev_tag = curr_tag
-        return bio_tags
+        spans = [(e.start_char, e.end_char, e.label_) for e in entities]
+        tokens, tags = spans_to_tokens(sent, spans, self.spacy_lm, merged=False)
+        return tags
 

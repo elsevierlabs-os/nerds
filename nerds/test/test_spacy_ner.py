@@ -5,7 +5,7 @@ from nerds.utils import load_data_and_labels
 
 import shutil
 
-def test_crf_ner():
+def test_spacy_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
     model = SpacyNER()
     model.fit(X, y)
@@ -15,3 +15,4 @@ def test_crf_ner():
     assert_equal(y, y_pred, "Label and prediction must be equal")
     assert_equal(1.0, model.score(X, y))
     shutil.rmtree("nerds/test/data/models")
+    # assert_true(False)

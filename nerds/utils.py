@@ -85,13 +85,16 @@ def unflatten_list(xs_flat, xs_lengths):
     return xs_unflat
 
 
-def tokens_to_spans(tokens, tags):
+def tokens_to_spans(tokens, tags, merged=True):
     """ Convert from tokens-tags format to sentence-span format. Some NERs
         use the sentence-span format, so we need to transform back and forth.
 
         Args:
             tokens (list(str)): list of tokens representing single sentence.
             tags (list(str)): list of tags in BIO format.
+            merged (bool): if True, offsets for consecutive tokens of the same 
+                entity type are merged into a single span, else spans are 
+                reported individually.
 
         Returns:
             sentence (str): the sentence as a string.
@@ -102,29 +105,37 @@ def tokens_to_spans(tokens, tags):
     spans = []
     curr, start, end, ent_cls = 0, None, None, None
     sentence = " ".join(tokens)
-    # print("tokens:", tokens)
-    # print("tags:", tags)
-    for token, tag in zip(tokens, tags):
-        if tag == "O":
-            if ent_cls is not None:
+    if merged:
+        for token, tag in zip(tokens, tags):
+            if tag == "O":
+                if ent_cls is not None:
+                    spans.append((start, end, ent_cls))
+                    start, end, ent_cls = None, None, None
+            elif tag.startswith("B-"):
+                ent_cls = tag.split("-")[1]
+                start = curr
+                end = curr + len(token)
+            else: # I-xxx
+                end += len(token) + 1
+            # advance curr
+            curr += len(token) + 1
+        
+        # handle remaining span
+        if ent_cls is not None:
+            spans.append((start, end, ent_cls))
+    else:
+        for token, tag in zip(tokens, tags):
+            if tag.startswith("B-") or tag.startswith("I-"):
+                ent_cls = tag.split("-")[1]
+                start = curr
+                end = curr + len(token)
                 spans.append((start, end, ent_cls))
-                start, end, ent_cls = None, None, None
-        elif tag.startswith("B-"):
-            ent_cls = tag.split("-")[1]
-            start = curr
-            end = curr + len(token)
-        else: # I-xxx
-            end += len(token) + 1
-        # advance curr
-        curr += len(token) + 1
-
-    if ent_cls is not None:
-        spans.append((start, end, ent_cls))
+            curr += len(token) + 1
 
     return sentence, spans
 
 
-def spans_to_tokens(sentence, spans, spacy_lm):
+def spans_to_tokens(sentence, spans, spacy_lm, merged=True):
     """ Convert from sentence-spans format to tokens-tags format. Some NERs 
         use the sentence-spans format, so we need to transform back and forth.
 
@@ -135,6 +146,10 @@ def spans_to_tokens(sentence, spans, spacy_lm):
                 position is 1 beyond actual end position of the token.
             spacy_lm: we use SpaCy EN language model to tokenizing the 
                 sentence to generate list of tokens.
+            merged (bool): if True, indicates that spans are merged (ie, the
+                are multi-word spans). Otherwise, indicates that spans are 
+                single tokens, and consecutive entries of the same class needs
+                to be transformed, ie. (B-x, B-x) should become (B-x, I-x)
 
         Returns:
             tokens (list(str)): list of tokens in sentence
@@ -161,6 +176,17 @@ def spans_to_tokens(sentence, spans, spacy_lm):
             tags.append("O")
 
         curr_start += len(t.text) + 1
+
+    # handle consecutive class labels if merged=False
+    if not merged:
+        prev_tag, merged_tags = None, []
+        for tag in tags:
+            if prev_tag is None or prev_tag != tag:
+                merged_tags.append(tag)
+            else:
+                merged_tags.append(tag.replace("B-", "I-"))
+            prev_tag = tag
+        tags = merged_tags
 
     return tokens, tags
 
