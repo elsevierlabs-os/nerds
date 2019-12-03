@@ -84,3 +84,83 @@ def unflatten_list(xs_flat, xs_lengths):
         start = end
     return xs_unflat
 
+
+def tokens_to_spans(tokens, tags):
+    """ Convert from tokens-tags format to sentence-span format. Some NERs
+        use the sentence-span format, so we need to transform back and forth.
+
+        Args:
+            tokens (list(str)): list of tokens representing single sentence.
+            tags (list(str)): list of tags in BIO format.
+
+        Returns:
+            sentence (str): the sentence as a string.
+            spans (list((int, int, str))): list of spans as a 3-tuple of start
+                position, end position, and entity type. Note that end position
+                is 1 beyond the actual ending position of the token.
+    """
+    spans = []
+    curr, start, end, ent_cls = 0, None, None, None
+    sentence = " ".join(tokens)
+    # print("tokens:", tokens)
+    # print("tags:", tags)
+    for token, tag in zip(tokens, tags):
+        if tag == "O":
+            if ent_cls is not None:
+                spans.append((start, end, ent_cls))
+                start, end, ent_cls = None, None, None
+        elif tag.startswith("B-"):
+            ent_cls = tag.split("-")[1]
+            start = curr
+            end = curr + len(token)
+        else: # I-xxx
+            end += len(token) + 1
+        # advance curr
+        curr += len(token) + 1
+
+    if ent_cls is not None:
+        spans.append((start, end, ent_cls))
+
+    return sentence, spans
+
+
+def spans_to_tokens(sentence, spans, spacy_lm):
+    """ Convert from sentence-spans format to tokens-tags format. Some NERs 
+        use the sentence-spans format, so we need to transform back and forth.
+
+        Args:
+            sentence (str): the sentence as a string.
+            spans (list((int, int, str))): list of spans as a 3-tuple of
+                start_position, end_position, and entity_type. Note that end
+                position is 1 beyond actual end position of the token.
+            spacy_lm: we use SpaCy EN language model to tokenizing the 
+                sentence to generate list of tokens.
+
+        Returns:
+            tokens (list(str)): list of tokens in sentence
+            tags (list(str)): list of tags in BIO format.
+    """
+    tokens, tags = [], []
+    curr_start, curr_end = 0, 0
+    for t in spacy_lm(sentence):
+        tokens.append(t.text)
+        curr_end = curr_start + len(t.text)
+        is_annotated = False
+        for span_start, span_end, span_cls in spans:
+            if curr_start == span_start:
+                tags.append("B-" + span_cls)
+                is_annotated = True
+                break
+            elif curr_start > span_start and curr_end <= span_end:
+                tags.append("I-" + span_cls)
+                is_annotated = True
+                break
+            else:
+                continue
+        if not is_annotated:
+            tags.append("O")
+
+        curr_start += len(t.text) + 1
+
+    return tokens, tags
+
