@@ -5,7 +5,7 @@ setup(
     author="Elsevier Content & Innovation",
     install_requires=[
         'allennlp',
-        'anago',
+        'anago @ git+https://github.com/Hironsan/anago.git',
         'future',
         'h5py',
         'hyperopt',

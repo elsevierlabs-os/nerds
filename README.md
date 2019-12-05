@@ -131,3 +131,6 @@ The [CONTRIBUTING.md file](docs/CONTRIBUTING.md) lists contributors who have con
 
 The [CHANGES.md file](docs/CHANGES.md) lists the changes and improvements that were made in this fork.
 
+# Talks and Blogs
+
+* \[slides\] [Slides for talk at PyData LA 2019](https://www.slideshare.net/sujitpal/building-named-entity-recognition-models-efficiently-using-nerds).
