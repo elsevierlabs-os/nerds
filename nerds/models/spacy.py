@@ -157,7 +157,7 @@ class SpacyNER(NERModel):
                     }
                 )
         """
-        sentence, spans = tokens_to_spans(tokens, labels, merged=False)
+        sentence, spans = tokens_to_spans(tokens, labels, allow_multiword_spans=False)
         return (sentence, {"entities": spans})
 
 
@@ -174,6 +174,6 @@ class SpacyNER(NERModel):
                     sentence.
         """
         spans = [(e.start_char, e.end_char, e.label_) for e in entities]
-        tokens, tags = spans_to_tokens(sent, spans, self.spacy_lm, merged=False)
+        tokens, tags = spans_to_tokens(sent, spans, self.spacy_lm, spans_are_multiword=False)
         return tags
 

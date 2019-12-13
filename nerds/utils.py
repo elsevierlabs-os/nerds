@@ -85,16 +85,16 @@ def unflatten_list(xs_flat, xs_lengths):
     return xs_unflat
 
 
-def tokens_to_spans(tokens, tags, merged=True):
+def tokens_to_spans(tokens, tags, allow_multiword_spans=True):
     """ Convert from tokens-tags format to sentence-span format. Some NERs
         use the sentence-span format, so we need to transform back and forth.
 
         Args:
             tokens (list(str)): list of tokens representing single sentence.
             tags (list(str)): list of tags in BIO format.
-            merged (bool): if True, offsets for consecutive tokens of the same 
-                entity type are merged into a single span, else spans are 
-                reported individually.
+            allow_multiword_spans (bool): if True, offsets for consecutive 
+                tokens of the same entity type are merged into a single span, 
+                otherwise tokens are reported as individual spans.
 
         Returns:
             sentence (str): the sentence as a string.
@@ -105,7 +105,7 @@ def tokens_to_spans(tokens, tags, merged=True):
     spans = []
     curr, start, end, ent_cls = 0, None, None, None
     sentence = " ".join(tokens)
-    if merged:
+    if allow_multiword_spans:
         for token, tag in zip(tokens, tags):
             if tag == "O":
                 if ent_cls is not None:
@@ -135,7 +135,7 @@ def tokens_to_spans(tokens, tags, merged=True):
     return sentence, spans
 
 
-def spans_to_tokens(sentence, spans, spacy_lm, merged=True):
+def spans_to_tokens(sentence, spans, spacy_lm, spans_are_multiword=True):
     """ Convert from sentence-spans format to tokens-tags format. Some NERs 
         use the sentence-spans format, so we need to transform back and forth.
 
@@ -146,10 +146,9 @@ def spans_to_tokens(sentence, spans, spacy_lm, merged=True):
                 position is 1 beyond actual end position of the token.
             spacy_lm: we use SpaCy EN language model to tokenizing the 
                 sentence to generate list of tokens.
-            merged (bool): if True, indicates that spans are merged (ie, the
-                are multi-word spans). Otherwise, indicates that spans are 
-                single tokens, and consecutive entries of the same class needs
-                to be transformed, ie. (B-x, B-x) should become (B-x, I-x)
+            spans_are_multiword (bool): if True, indicates that spans can
+                be multi-word spans), so consecutive entries of the same class 
+                should be transformed, ie. (B-x, B-x) should become (B-x, I-x).
 
         Returns:
             tokens (list(str)): list of tokens in sentence
@@ -177,8 +176,8 @@ def spans_to_tokens(sentence, spans, spacy_lm, merged=True):
 
         curr_start += len(t.text) + 1
 
-    # handle consecutive class labels if merged=False
-    if not merged:
+    # handle consecutive class labels if spans were single word spans
+    if not spans_are_multiword:
         prev_tag, merged_tags = None, []
         for tag in tags:
             if prev_tag is None or prev_tag != tag:

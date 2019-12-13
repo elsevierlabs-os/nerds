@@ -27,7 +27,7 @@ def test_flatten_and_unflatten_list():
 def test_tokens_to_spans():
     data, labels = load_data_and_labels("nerds/test/data/example.iob")
     tokens, tags = data[0], labels[0]
-    sentence, spans = tokens_to_spans(tokens, tags, merged=True)
+    sentence, spans = tokens_to_spans(tokens, tags, allow_multiword_spans=True)
     assert_equal(
         "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov . 29 .",
         sentence, "Sentence reconstruction is incorrect")
@@ -43,10 +43,28 @@ def test_tokens_to_spans():
     assert_equal("DATE", spans[2][2], "spans[2].cls should be DATE")
 
 
+def test_tokens_to_spans_no_multiword_spans():
+    data, labels = load_data_and_labels("nerds/test/data/example.iob")
+    tokens, tags = data[0], labels[0]
+    # convert to single token per span format
+    tags = ["O" if t == "O" else "B-" + t.split("-")[1] for t in tags]
+    sentence, spans = tokens_to_spans(tokens, tags, allow_multiword_spans=False)
+    assert_equal(8, len(spans), "Should be exactly 8 spans")
+    assert_equal(0, spans[0][0], "spans[0].start should be 0")
+    assert_equal(6, spans[0][1], "spans[0].end should be 6")
+    assert_equal("PER", spans[0][2], "spans[0].cls should be PER")
+    assert_equal(16, spans[2][0], "spans[2].start should be 16")
+    assert_equal(18, spans[2][1], "spans[2].end should be 18")
+    assert_equal("DATE", spans[2][2], "spans[2].cls should be DATE")
+    assert_equal(78, spans[5][0], "spans[5].start should be 78")
+    assert_equal(81, spans[5][1], "spans[5].end should be 81")
+    assert_equal("DATE", spans[5][2], "spans[5].cls should be DATE")
+
+
 def test_spans_to_tokens():
     sentence = "Mr . Vinken is chairman of Elsevier N . V . , the Dutch publishing group ."
     spans = [(0, 11, "PER"), (27, 43, "ORG"), (50, 55, "NORP")]
-    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, merged=True)
+    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, spans_are_multiword=True)
     # reference tokens and tags for comparison
     data, labels = load_data_and_labels("nerds/test/data/example.iob")
     ref_tokens, ref_tags = data[1], labels[1]
@@ -58,10 +76,10 @@ def test_spans_to_tokens():
         assert_equal(ref_tag, tag, "Tags do not match. {:s} != {:s}".format(ref_tag, tag))
 
 
-def test_spans_to_tokens_unmerged():
+def test_spans_to_tokens_no_multiword_spans():
     sentence = "Mr . Vinken is chairman of Elsevier N . V . , the Dutch publishing group ."
     spans = [(0, 2, 'PER'), (3, 4, 'PER'), (5, 11, 'PER'), (27, 35, 'ORG'), (36, 37, 'ORG'), (38, 39, 'ORG'), (40, 41, 'ORG'), (42, 43, 'ORG'), (50, 55, 'NORP')]
-    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, merged=False)
+    tokens, tags = spans_to_tokens(sentence, spans, spacy_lm, spans_are_multiword=False)
     ref_preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
     for ref_pred, pred in zip(ref_preds, tags):
         assert_equal(ref_pred, pred, "Tags do not match. {:s} != {:s}".format(ref_pred, pred))
