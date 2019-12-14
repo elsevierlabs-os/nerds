@@ -174,7 +174,11 @@ def spans_to_tokens(sentence, spans, spacy_lm, spans_are_multiword=True):
         if not is_annotated:
             tags.append("O")
 
-        curr_start += len(t.text) + 1
+        # advance pointer across current word
+        curr_start += len(t.text)
+        # advance pointer across space if next token separated by space
+        if curr_start < len(sentence) and sentence[curr_start] == " ":
+            curr_start += 1
 
     # handle consecutive class labels if spans were single word spans
     if not spans_are_multiword:
