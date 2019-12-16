@@ -10,15 +10,25 @@ log = get_logger()
 
 class DictionaryNER(NERModel):
 
-    def __init__(self, entity_label=None):
-        super().__init__(entity_label)
-        self.key = "aho-corasick-dict-ner"
-        self.model = None
-        self.spacy_lm = spacy.load("en")
+    def __init__(self, from_dictionary=False):
+        """ Construct a DictionaryNER object. The DictionaryNER functions
+            like a gazetteer, and is based on the Aho-Corasick algorithm
+            implemented by the pyAhoCorasick package.
+
+            Args:
+                from_dictionary (bool, default False): if True, input is
+                    multi-word phrases representing entities, otherwise
+                    input is potentially multi-word phrases annotated as
+                    a sequence of (token, tag) pairs. See fit(X, y) for
+                    more information.
+        """
+        super().__init__()
+        self.from_dictionary = from_dictionary
+        self._spacy_lm = None
+        self.model_ = None
 
 
-    def fit(self, X, y,
-            combine_tokens=True):
+    def fit(self, X, y):
         """ Build dictionary of phrases of different entity types.
 
             Args:
@@ -42,36 +52,29 @@ class DictionaryNER(NERModel):
                     is True, then labels are IOB tags. If combine_tokens is False,
                     labels are entity types (without leading B and I), and without
                     any O labels.
-
-                combine_tokens (bool, default True): if True, input comes from
-                    standard training set, and an additional step to chunk 
-                    phrases is needed. If False, input comes from a dictionary
-                    with phrase chunking already done.
         """
-        self.model = ahocorasick.Automaton()
-
-        if combine_tokens:
+        self.model_ = ahocorasick.Automaton()
+        if self.from_dictionary:
+            for token, label in zip(X, y):
+                self.model_.add_word(token, (label, token))
+        else:            
             for idx, (tokens, labels) in enumerate(zip(X, y)):
                 phrase_tokens, phrase_labels = self._combine_tokens(tokens, labels)
                 for phrase, label in zip(phrase_tokens, phrase_labels):
-                    self.model.add_word(phrase, (label, phrase))
-        else:
-            for token, label in zip(X, y):
-                self.model.add_word(token, (label, token))
-        self.model.make_automaton()
-
+                    self.model_.add_word(phrase, (label, phrase))
+        self.model_.make_automaton()
         return self
 
 
     def predict(self, X):
-        if self.model is None:
+        if self.model_ is None:
             raise ValueError("No model found, use fit() to train or load() pretrained.")
         
         predictions = []
         for tokens in X:
             sent = " ".join(tokens)
             matched_phrases = []
-            for end_index, (tag, phrase) in self.model.iter(sent):
+            for end_index, (tag, phrase) in self.model_.iter(sent):
                 start_index = end_index - len(phrase) + 1
                 # filter out spurious matches on partial words
                 self._add_if_not_spurious_match(
@@ -79,14 +82,16 @@ class DictionaryNER(NERModel):
             # remove subsumed phrases
             longest_phrases = self._remove_subsumed_matches(matched_phrases, 1)
             # convert longest matches to IOB format
-            _, pred = spans_to_tokens(sent, longest_phrases, self.spacy_lm)
+            if self._spacy_lm is None:
+                self._spacy_lm = self._load_language_model()
+            _, pred = spans_to_tokens(sent, longest_phrases, self._spacy_lm)
             predictions.append(pred)
 
         return predictions
 
 
     def save(self, dirpath=None):
-        if self.model is None:
+        if self.model_ is None:
             raise ValueError("No model found, use fit() to train or load() pretrained.")
 
         if not os.path.exists(dirpath):
@@ -94,7 +99,7 @@ class DictionaryNER(NERModel):
 
         log.info("Saving model...")
         model_file = os.path.join(dirpath, "dictionary-ner.pkl")
-        joblib.dump(self.model, model_file)
+        joblib.dump(self.model_, model_file)
 
 
     def load(self, dirpath=None):
@@ -102,8 +107,12 @@ class DictionaryNER(NERModel):
         if not os.path.exists(model_file):
             raise ValueError("Saved model {:s} not found.".format(model_file))
 
-        self.model = joblib.load(model_file)
+        self.model_ = joblib.load(model_file)
         return self
+
+
+    def _load_language_model(self):
+        return spacy.load("en")
 
 
     def _combine_tokens(self, tokens, labels):

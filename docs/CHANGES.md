@@ -26,19 +26,24 @@
       * works against most recent Anago API changes
       * does not give timestep size errors
   * ElmoNER
-    * New, available in Anago, same API as Anago's BiLSTMCRF
+    * New, available in Anago DEV repo, same API as Anago's BiLSTMCRF
   * EnsembleNER
     * simpler interface 
     * weights from each classifier
     * joblib.Parallel -- improve?
 * Utils
   * Thin wrapper over anago's `load_data_and_labels`
-  * Converter for output so scikit-learn metrics can be used.
-
-* Other stuff
+  * `flatten_list` and `unflatten_list` to convert between `list(list(str))` produced by NERDS models and `list(str)` required by `sklearn`, scikit-learn metrics can be used.
+  * `tokens_to_spans` and `spans_to_tokens` -- utility functions to convert between sentence and span format (used by the other 2 of 5 provided models) from and to BIO format.
+* Converters
+  * Converter from BRAT (.txt and .ann) to IOB format
+* Miscellaneous
   * remove deprecated sklearn.external.joblib -> joblib
+  * True Scikit-Learn interoperability -- some progress has been made, parameters are now provided in constructor rather than as keywords in the `fit()` call. However, `check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are list(list(str)) rather than list(str).
 
 ## Planned
 
-* Scikit-Learn interoperability.
+* Convert Docs to numpy docstring format -- https://numpydoc.readthedocs.io/en/latest/format.html
 * BERT Transformer based NER
+* FLAIR based NER
+

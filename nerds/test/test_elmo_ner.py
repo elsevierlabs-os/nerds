@@ -8,10 +8,10 @@ import shutil
 
 def test_crf_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
-    model = ElmoNER()
     # there are 28 unique words in our "vocabulary"
     embeddings = np.random.random((28, 100))
-    model.fit(X, y, embeddings=embeddings, num_epochs=1)
+    model = ElmoNER(embeddings=embeddings, max_iter=1)
+    model.fit(X, y)
     model.save("nerds/test/data/models")
     model_r = model.load("nerds/test/data/models")
     y_pred = model_r.predict(X)

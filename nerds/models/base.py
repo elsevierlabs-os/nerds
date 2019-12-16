@@ -9,10 +9,9 @@ class NERModel(BaseEstimator, ClassifierMixin):
         This is the core class responsible for training models that perform
         named entity recognition, and retrieving named entities from documents.
     """
-    def __init__(self, entity_label=None):
-        self.entity_label = entity_label
-        self.key = ""  # To be added in subclass.
-
+    def __init__(self):
+        pass
+    
     def fit(self, X, y):
         """ Train the model using data (X) and labels (y). Return trained model.
         """

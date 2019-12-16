@@ -13,43 +13,46 @@ log = get_logger()
 
 class SpacyNER(NERModel):
 
-    def __init__(self, entity_label=None):
-        """ Build a SpaCy EntityRecognizer NER model.
+    def __init__(self,
+            dropout=0.1,
+            max_iter=20,
+            batch_size=32):
+        """ Construct a SpaCy based NER. The SpaCy library provides an EntityRecognizer 
+            class to do Named Entity Recognition.
 
             Args:
-                entity_label (str, default None): entity label for single class NER.
+                dropout (float): rate of dropout during training between 0 and 1.
+                max_iter (int): number of epochs of training.
+                batch_size (int): batch size to use during training
+
         """
-        super().__init__(entity_label)
-        self.key = "spacy_ner"
-        self.model = None
-        self.spacy_lm = spacy.load("en")
+        super().__init__()
+        self.dropout = dropout
+        self.max_iter = max_iter
+        self.batch_size = batch_size
+        self._spacy_lm = spacy.load("en")
+        self.model_ = None
 
 
-    def fit(self, X, y,
-            num_epochs=20,
-            dropout=0.1,
-            batch_size=32):
+    def fit(self, X, y):
         """ Trains the SpaCy NER model.
 
             Args:
                 X (list(list(str))): list of tokenized sentences, or list of list
                     of tokens.
                 y (list(list(str))): list of list of BIO tags.
-                num_epochs (int): number of epochs of training.
-                dropout (float): rate of dropout during training between 0 and 1.
-                batch_size (int): batch size to use during training
         """
         log.info("Reformatting data to SpaCy format...")
         features = [self._convert_to_spacy(tokens, labels) 
             for tokens, labels in zip(X, y)]
 
         log.info("Building SpaCy NER model...")
-        self.model = spacy.blank("en")
-        if "ner" not in self.model.pipe_names:
-            ner = self.model.create_pipe("ner")
-            self.model.add_pipe(ner)
+        self.model_ = spacy.blank("en")
+        if "ner" not in self.model_.pipe_names:
+            ner = self.model_.create_pipe("ner")
+            self.model_.add_pipe(ner)
         else:
-            ner = self.model.get_pipe("ner")
+            ner = self.model_.get_pipe("ner")
 
         unique_labels = set()
         for _, annotations in features:
@@ -58,24 +61,22 @@ class SpacyNER(NERModel):
                 ner.add_label(ent[2])
 
         for label in list(unique_labels):
-            ner.add_label("B-" + label)
-            ner.add_label("I-" + label)
-        ner.add_label("O")
+            ner.add_label(label)
 
         log.info("Training SpaCy NER model...")
-        optimizer = self.model.begin_training()
+        optimizer = self.model_.begin_training()
 
-        other_pipes = [p for p in self.model.pipe_names if p != "ner"]
-        with self.model.disable_pipes(*other_pipes):
-            for it in range(num_epochs):
+        other_pipes = [p for p in self.model_.pipe_names if p != "ner"]
+        with self.model_.disable_pipes(*other_pipes):
+            for it in range(self.max_iter):
                 random.shuffle(features)
                 losses = {}
-                batches = minibatch(features, size=batch_size)
+                batches = minibatch(features, size=self.batch_size)
                 for batch in batches:
                     texts, annotations = zip(*batch)
-                    self.model.update(texts, annotations, 
+                    self.model_.update(texts, annotations, 
                     sgd=optimizer, 
-                    drop=dropout, 
+                    drop=self.dropout, 
                     losses=losses)
                 loss_value = losses["ner"]
                 log.info("Epoch: {:d} loss: {:.5f}".format(it, loss_value))
@@ -93,14 +94,14 @@ class SpacyNER(NERModel):
             Returns:
                 y (list(list(str))): list of list of predicted BIO tags.
         """
-        if self.model is None:
+        if self.model_ is None:
             raise ValueError("Cannot predict with empty model, run fit() to train or load() pretrained model.")
 
         log.info("Generating predictions...")
         preds = []
         for sent_tokens in X:
             sent = " ".join(sent_tokens)
-            doc = self.model(sent)
+            doc = self.model_(sent)
             sent_preds = self._convert_from_spacy(sent, doc.ents)
             preds.append(sent_preds)
 
@@ -113,13 +114,13 @@ class SpacyNER(NERModel):
             Args:
                 dirpath (str): path to model directory.
         """
-        if self.model is None:
+        if self.model_ is None:
             raise ValueError("Cannot save empty model, run fit() to train or load() pretrained model")
 
         log.info("Saving model...")
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-        self.model.to_disk(dirpath)
+        self.model_.to_disk(dirpath)
 
 
     def load(self, dirpath):
@@ -134,7 +135,7 @@ class SpacyNER(NERModel):
             raise ValueError("Model directory {:s} not found".format(dirpath))
 
         log.info("Loading model...")
-        self.model = spacy.load(dirpath)
+        self.model_ = spacy.load(dirpath)
         return self
 
 
@@ -174,6 +175,7 @@ class SpacyNER(NERModel):
                     sentence.
         """
         spans = [(e.start_char, e.end_char, e.label_) for e in entities]
-        tokens, tags = spans_to_tokens(sent, spans, self.spacy_lm, spans_are_multiword=False)
+        tokens, tags = spans_to_tokens(sent, spans, self._spacy_lm, 
+            spans_are_multiword=False)
         return tags
 

@@ -7,8 +7,8 @@ import shutil
 
 def test_crf_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
-    model = BiLstmCrfNER()
-    model.fit(X, y, num_epochs=1)
+    model = BiLstmCrfNER(max_iter=1)
+    model.fit(X, y)
     model.save("nerds/test/data/models")
     model_r = model.load("nerds/test/data/models")
     y_pred = model_r.predict(X)

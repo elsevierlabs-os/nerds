@@ -9,23 +9,13 @@ log = get_logger()
 
 class EnsembleNER(NERModel):
 
-    def __init__(self, entity_label=None):
-        super().__init__(entity_label)
-        self.key = "voting_ensemble"
-        # these are set by fit and load, required by predict and save
-        self.estimators = None
-        self.weights = None
-
-
-    def fit(self, X, y, 
+    def __init__(self,
             estimators=[],
             weights=None,
             is_pretrained=False):
-        """ Train ensemble by training underlying NERModels.
+        """ Constructor for Voting Ensemble NER.
 
             Args:
-                X (list(list(str))): list of list of tokens.
-                y (list(list(str))): list of list of BIO tags.
                 estimators (list(NERModel, dict(str,obj)), default empty): list 
                     of (NERModels, fit_param) pairs to use in the ensemble. The
                     fit_param is a flat dictionary of named arguments used in
@@ -34,30 +24,46 @@ class EnsembleNER(NERModel):
                     apply to predicted class labels from each estimator. If
                     None, then predictions from all estimators are treated 
                     equally.
-        """
-        if estimators is None or len(estimators) == 0:
-            raise ValueError("Non-empty list of estimators required to fit ensemble.")
-        else:
-            self.estimators = estimators
-        if weights is None:
-            self.weights = [1] * len(estimators)
-        else:
-            if len(estimators) != len(weights):
-                raise ValueError("Number of weights must correspond to number of estimators.")
-            else:
-                self.weights = weights
 
-        if is_pretrained:
+        """
+        super().__init__()
+        # these are set by fit and load, required by predict and save
+        self.estimators = estimators
+        self.weights = weights
+        self.is_pretrained=is_pretrained
+
+
+    def fit(self, X, y):
+        """ Train ensemble by training underlying NERModels.
+
+            Args:
+                X (list(list(str))): list of list of tokens.
+                y (list(list(str))): list of list of BIO tags.
+        """
+        if self.estimators is None or len(self.estimators) == 0:
+            raise ValueError("Non-empty list of estimators required to fit ensemble.")
+        if self.weights is None:
+            self.weights = [1] * len(self.estimators)
+        else:
+            if len(self.estimators) != len(self.weights):
+                raise ValueError("Number of weights must correspond to number of estimators.")
+
+        if self.is_pretrained:
             return self
 
         # various pickling errors are seen if we use joblib.Parallel to fit 
         # in parallel across multiple processors. Since normal usage should
         # not involve calling fit(), this is okay to keep as sequential.
-        fitted_estimators = [self._fit_estimator(clf, X, y, fit_params) 
-            for clf, fit_params in self.estimators]
-
-        self.estimators = [(fitted, params) for (clf, params), fitted in 
+        fitted_estimators = [self._fit_estimator(clf, X, y) 
+            for name, clf in self.estimators]
+        self.estimators = [(name, fitted) for (name, clf), fitted in 
             zip(self.estimators, fitted_estimators)]
+
+        # fitted_estimators = joblib.Parallel(n_jobs=-1, backend="threading")(
+        #     map(lambda clf: joblib.delayed(self._fit_estimator(clf[1], X, y)), 
+        #         self.estimators))
+        # self.estimators = [(name, fitted) for (name, clf), fitted 
+        #     in zip(self.estimators, fitted_estimators)]
 
         return self
 
@@ -78,7 +84,7 @@ class EnsembleNER(NERModel):
             raise ValueError("Model not ready to predict. Call fit() first, or if using pre-trained models, call fit() with is_pretrained=True")
         
         predictions = []
-        for clf, _ in self.estimators:
+        for _, clf in self.estimators:
             predictions.append(clf.predict(X))
 
         return self._vote(predictions)
@@ -92,8 +98,8 @@ class EnsembleNER(NERModel):
         raise NotImplementedError()
 
 
-    def _fit_estimator(self, estimator, X, y, fit_params):
-        fitted_estimator = estimator.fit(X, y, **fit_params)
+    def _fit_estimator(self, estimator, X, y):
+        fitted_estimator = estimator.fit(X, y)
         return fitted_estimator
 
 

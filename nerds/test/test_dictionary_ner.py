@@ -26,8 +26,8 @@ def test_dictionary_ner_from_dict():
         xs.append(x)
         ys.append(y)
     fdict.close()
-    model = DictionaryNER()
-    model.fit(xs, ys, combine_tokens=False)
+    model = DictionaryNER(from_dictionary=True)
+    model.fit(xs, ys)
     # predict using example
     X, y = load_data_and_labels("nerds/test/data/example.iob")
     y_pred = model.predict(X)
