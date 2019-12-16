@@ -18,22 +18,7 @@ log = get_logger()
 
 class ElmoNER(NERModel):
 
-    def __init__(self, entity_label=None):
-        """ Build a Anago Bi-LSTM CRF model.
-
-            Args:
-                entity_label: label for single entity NER, default None
-        """
-        super().__init__(entity_label)
-        self.key = "anago_elmo"
-        # populated by fit() and load(), expected by save() and transform()
-        self.preprocessor = None
-        self.model = None
-        self.trainer = None
-        self.tagger = None
-
-
-    def fit(self, X, y,
+    def __init__(self,
             word_embedding_dim=100,
             char_embedding_dim=25,
             word_lstm_size=100,
@@ -44,12 +29,15 @@ class ElmoNER(NERModel):
             embeddings_file="glove.6B.100d.txt",
             batch_size=16, 
             learning_rate=0.001, 
-            num_epochs=2):
-        """ Trains the NER model. Input is list of AnnotatedDocuments.
+            max_iter=2):
+        """ Construct a ELMo based NER model. Model is similar to the BiLSTM-CRF
+            model except that the word embeddings are contextual, since they are
+            returned by a trained ELMo model. ELMo model requires an additional 
+            embedding, which is Glove-100 by default. ELMo model is provided by
+            the (dev) Anago project.
 
             Args:
-                X list(list(str)): list of list of tokens
-                y list(list(str)): list of list of BIO tags
+                entity_label: label for single entity NER, default None
                 word_embedding_dim (int): word embedding dimensions.
                 char_embedding_dim (int): character embedding dimensions.
                 word_lstm_size (int): character LSTM feature extractor output dimensions.
@@ -60,50 +48,76 @@ class ElmoNER(NERModel):
                 embeddings_file (str): path to embedding file.
                 use_char (boolean): add char feature.
                 use_crf (boolean): use crf as last layer.
-                batch_size training batch size.
-                learning_rate learning rate for Adam optimizer.
-                num_epochs number of epochs of training.
+                batch_size (int): training batch size.
+                learning_rate (float): learning rate for Adam optimizer.
+                max_iter (int): number of epochs of training.
         """
-        if embeddings is None and (embeddings_file is None or embeddings_dim is None):
-            raise ValueError("Either embeddings should be provided, or both embeddings_file and embeddings_dim should be provided, exiting.")
+        super().__init__()
+        self.word_embedding_dim = word_embedding_dim
+        self.char_embedding_dim = char_embedding_dim
+        self.word_lstm_size = word_lstm_size
+        self.char_lstm_size = char_lstm_size
+        self.fc_dim = fc_dim
+        self.dropout = dropout
+        self.embeddings = embeddings
+        self.embeddings_file = embeddings_file
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.max_iter = max_iter
+        # populated by fit() and load(), expected by save() and transform()
+        self.preprocessor_ = None
+        self.model_ = None
+        self.trainer_ = None
+        self.tagger_ = None
+
+
+    def fit(self, X, y):
+        """ Trains the NER model. Input is list of AnnotatedDocuments.
+
+            Args:
+                X list(list(str)): list of list of tokens
+                y list(list(str)): list of list of BIO tags
+        """
+        if self.embeddings is None and self.embeddings_file is None:
+            raise ValueError("Either embeddings or embeddings_file should be provided, exiting.")
 
         log.info("Preprocessing dataset...")
-        self.preprocessor = ELMoTransformer()
-        self.preprocessor.fit(X, y)
+        self.preprocessor_ = ELMoTransformer()
+        self.preprocessor_.fit(X, y)
 
-        if embeddings is None:
-            embeddings = load_glove(embeddings_file)
-            embeddings_dim != embeddings[list(embeddings.keys())[0]].shape[0]
-            embeddings = filter_embeddings(embeddings, 
-                self.preprocessor._word_vocab.vocab, 
+        if self.embeddings is None:
+            self.embeddings = load_glove(self.embeddings_file)
+            embeddings_dim != self.embeddings[list(self.embeddings.keys())[0]].shape[0]
+            self.embeddings = filter_embeddings(self.embeddings, 
+                self.preprocessor_._word_vocab.vocab, 
                 embeddings_dim)
 
         log.info("Building model...")
-        self.model = ELModel(
-            char_embedding_dim=char_embedding_dim,
-            word_embedding_dim=word_embedding_dim,
-            char_lstm_size=char_lstm_size,
-            word_lstm_size=word_lstm_size,
-            char_vocab_size=self.preprocessor.char_vocab_size,
-            word_vocab_size=self.preprocessor.word_vocab_size,
-            num_labels=self.preprocessor.label_size,
-            embeddings=embeddings,
-            dropout=dropout)
+        self.model_ = ELModel(
+            char_embedding_dim=self.char_embedding_dim,
+            word_embedding_dim=self.word_embedding_dim,
+            char_lstm_size=self.char_lstm_size,
+            word_lstm_size=self.word_lstm_size,
+            char_vocab_size=self.preprocessor_.char_vocab_size,
+            word_vocab_size=self.preprocessor_.word_vocab_size,
+            num_labels=self.preprocessor_.label_size,
+            embeddings=self.embeddings,
+            dropout=self.dropout)
 
-        self.model, loss = self.model.build()
-        optimizer = Adam(lr=learning_rate)
-        self.model.compile(loss=loss, optimizer=optimizer)
-        self.model.summary()
+        self.model_, loss = self.model_.build()
+        optimizer = Adam(lr=self.learning_rate)
+        self.model_.compile(loss=loss, optimizer=optimizer)
+        self.model_.summary()
 
         log.info('Training the model...')
-        self.trainer = Trainer(self.model, preprocessor=self.preprocessor)
+        self.trainer_ = Trainer(self.model_, preprocessor=self.preprocessor_)
 
         x_train, x_valid, y_train, y_valid = train_test_split(X, y, 
             test_size=0.1, random_state=42)
-        self.trainer.train(x_train, y_train, x_valid=x_valid, y_valid=y_valid,
-            batch_size=batch_size, epochs=num_epochs)
+        self.trainer_.train(x_train, y_train, x_valid=x_valid, y_valid=y_valid,
+            batch_size=self.batch_size, epochs=self.max_iter)
 
-        self.tagger = Tagger(self.model, preprocessor=self.preprocessor)
+        self.tagger_ = Tagger(self.model_, preprocessor=self.preprocessor_)
 
         return self
 
@@ -116,11 +130,11 @@ class ElmoNER(NERModel):
             Returns:
                 y list(list(str)): list of list of predicted BIO tags.
         """
-        if self.tagger is None:
+        if self.tagger_ is None:
             raise ValueError("No tagger found, either run fit() to train or load() a trained model")
 
         log.info("Predicting from model...")
-        ypreds = [self.tagger.predict(" ".join(x)) for x in X]
+        ypreds = [self.tagger_.predict(" ".join(x)) for x in X]
         return ypreds
 
 
@@ -132,7 +146,7 @@ class ElmoNER(NERModel):
                 Model saves a weights.h5 weights file, a params.json parameter
                 file, and a preprocessor.pkl preprocessor file.
         """
-        if self.model is None or self.preprocessor is None:
+        if self.model_ is None or self.preprocessor_ is None:
             raise ValueError("No model artifacts to save, either run fit() to train or load() a trained model")
 
         if not os.path.exists(dirpath):
@@ -142,8 +156,8 @@ class ElmoNER(NERModel):
         params_file = os.path.join(dirpath, "params.json")
         preprocessor_file = os.path.join(dirpath, "preprocessor.pkl")
 
-        save_model(self.model, weights_file, params_file)
-        self.preprocessor.save(preprocessor_file)
+        save_model(self.model_, weights_file, params_file)
+        self.preprocessor_.save(preprocessor_file)
 
 
     def load(self, dirpath):
@@ -164,9 +178,9 @@ class ElmoNER(NERModel):
                 os.path.exists(preprocessor_file)):
             raise ValueError("Model files may be corrupted, exiting")
         
-        self.model = load_model(weights_file, params_file)
-        self.preprocessor = ELMoTransformer.load(preprocessor_file)
-        self.tagger = Tagger(self.model, preprocessor=self.preprocessor)
+        self.model_ = load_model(weights_file, params_file)
+        self.preprocessor_ = ELMoTransformer.load(preprocessor_file)
+        self.tagger_ = Tagger(self.model_, preprocessor=self.preprocessor_)
 
         return self
 

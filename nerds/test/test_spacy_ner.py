@@ -15,4 +15,3 @@ def test_spacy_ner():
     assert_equal(y, y_pred, "Label and prediction must be equal")
     assert_equal(1.0, model.score(X, y))
     shutil.rmtree("nerds/test/data/models")
-    # assert_true(False)
