@@ -40,10 +40,10 @@
 * Miscellaneous
   * replaced deprecated sklearn.external.joblib -> joblib
   * True Scikit-Learn interoperability -- moved parameters to constructor. However, `sklearn.utils.check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are `list(list(str))` rather than `list(str)`.
+  * Docs converted to Numpy Docstring format.
 
 ## Planned
 
-* Convert Docs to numpy docstring format -- https://numpydoc.readthedocs.io/en/latest/format.html
 * BERT Transformer based NER
 * FLAIR based NER
 
