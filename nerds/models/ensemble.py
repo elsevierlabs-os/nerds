@@ -14,6 +14,7 @@ class EnsembleNER(NERModel):
     def __init__(self,
             estimators=[],
             weights=None,
+            n_jobs=1,
             is_pretrained=False):
         """ Constructor for Voting Ensemble NER.
 
@@ -26,7 +27,11 @@ class EnsembleNER(NERModel):
                     apply to predicted class labels from each estimator. If
                     None, then predictions from all estimators are treated 
                     equally.
-
+                n_jobs (int, default=1): number of jobs to run in parallel, 
+                    default is to single-thread. -1 means to use all available
+                    resources.
+                is_pretrained (bool, default False): if True, estimators are
+                    assumed to be pretrained and fit() is skipped.
         """
         super().__init__()
         # these are set by fit and load, required by predict and save
@@ -53,19 +58,11 @@ class EnsembleNER(NERModel):
         if self.is_pretrained:
             return self
 
-        # various pickling errors are seen if we use joblib.Parallel to fit 
-        # in parallel across multiple processors. Since normal usage should
-        # not involve calling fit(), this is okay to keep as sequential.
-        fitted_estimators = [self._fit_estimator(clf, X, y) 
-            for name, clf in self.estimators]
-        self.estimators = [(name, fitted) for (name, clf), fitted in 
-            zip(self.estimators, fitted_estimators)]
-
-        # fitted_estimators = joblib.Parallel(n_jobs=-1, backend="threading")(
-        #     map(lambda clf: joblib.delayed(self._fit_estimator(clf[1], X, y)), 
-        #         self.estimators))
-        # self.estimators = [(name, fitted) for (name, clf), fitted 
-        #     in zip(self.estimators, fitted_estimators)]
+        fitted_estimators = joblib.Parallel(n_jobs=-1, backend="threading")(
+            joblib.delayed(self._fit_estimator)(clf, X, y) 
+            for name, clf in self.estimators)
+        self.estimators = [(name, fitted) for (name, clf), fitted 
+            in zip(self.estimators, fitted_estimators)]
 
         return self
 
@@ -85,9 +82,9 @@ class EnsembleNER(NERModel):
         if self.estimators is None or self.weights is None:
             raise ValueError("Model not ready to predict. Call fit() first, or if using pre-trained models, call fit() with is_pretrained=True")
         
-        predictions = []
-        for _, clf in self.estimators:
-            predictions.append(clf.predict(X))
+        predictions = joblib.Parallel(n_jobs=-1, backend="threading")(
+            joblib.delayed(self._predict_estimator)(clf, X) 
+            for name, clf in self.estimators)
 
         return self._vote(predictions)
 

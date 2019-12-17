@@ -30,7 +30,7 @@
   * EnsembleNER
     * simpler interface 
     * weights from each classifier
-    * joblib.Parallel -- improve?
+    * fit() and predict() can use multiple parallel jobs (`n_jobs`).
 * Utils
   * Thin wrapper over anago's `load_data_and_labels`
   * `flatten_list` and `unflatten_list` to convert between `list(list(str))` produced by NERDS models and `list(str)` required by `sklearn`, scikit-learn metrics can be used.
@@ -38,8 +38,8 @@
 * Converters
   * Converter from BRAT (.txt and .ann) to IOB format
 * Miscellaneous
-  * remove deprecated sklearn.external.joblib -> joblib
-  * True Scikit-Learn interoperability -- some progress has been made, parameters are now provided in constructor rather than as keywords in the `fit()` call. However, `check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are list(list(str)) rather than list(str).
+  * replaced deprecated sklearn.external.joblib -> joblib
+  * True Scikit-Learn interoperability -- moving parameters to constructor has resulted in estimators being serializable and usable via joblib.Parallel. However, `sklearn.utils.check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are `list(list(str))` rather than `list(str)`.
 
 ## Planned
 
