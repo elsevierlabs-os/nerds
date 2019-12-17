@@ -37,6 +37,7 @@ class EnsembleNER(NERModel):
         # these are set by fit and load, required by predict and save
         self.estimators = estimators
         self.weights = weights
+        self.n_jobs = n_jobs
         self.is_pretrained=is_pretrained
 
 
@@ -58,7 +59,7 @@ class EnsembleNER(NERModel):
         if self.is_pretrained:
             return self
 
-        fitted_estimators = joblib.Parallel(n_jobs=-1, backend="threading")(
+        fitted_estimators = joblib.Parallel(n_jobs=self.n_jobs, backend="threading")(
             joblib.delayed(self._fit_estimator)(clf, X, y) 
             for name, clf in self.estimators)
         self.estimators = [(name, fitted) for (name, clf), fitted 
@@ -82,7 +83,7 @@ class EnsembleNER(NERModel):
         if self.estimators is None or self.weights is None:
             raise ValueError("Model not ready to predict. Call fit() first, or if using pre-trained models, call fit() with is_pretrained=True")
         
-        predictions = joblib.Parallel(n_jobs=-1, backend="threading")(
+        predictions = joblib.Parallel(n_jobs=self.n_jobs, backend="threading")(
             joblib.delayed(self._predict_estimator)(clf, X) 
             for name, clf in self.estimators)
 

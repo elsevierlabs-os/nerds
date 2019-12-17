@@ -39,7 +39,7 @@
   * Converter from BRAT (.txt and .ann) to IOB format
 * Miscellaneous
   * replaced deprecated sklearn.external.joblib -> joblib
-  * True Scikit-Learn interoperability -- moving parameters to constructor has resulted in estimators being serializable and usable via joblib.Parallel. However, `sklearn.utils.check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are `list(list(str))` rather than `list(str)`.
+  * True Scikit-Learn interoperability -- moved parameters to constructor. However, `sklearn.utils.check_estimator` still fails, most likely because the parameters to `fit()` and `predict()` are `list(list(str))` rather than `list(str)`.
 
 ## Planned
 
