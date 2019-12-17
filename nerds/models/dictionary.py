@@ -15,12 +15,17 @@ class DictionaryNER(NERModel):
             like a gazetteer, and is based on the Aho-Corasick algorithm
             implemented by the pyAhoCorasick package.
 
-            Args:
-                from_dictionary (bool, default False): if True, input is
-                    multi-word phrases representing entities, otherwise
-                    input is potentially multi-word phrases annotated as
-                    a sequence of (token, tag) pairs. See fit(X, y) for
-                    more information.
+            Parameters
+            ----------
+            from_dictionary : bool, optional, default False
+                if True, input is multi-word phrases representing entities, 
+                otherwise input is potentially multi-word phrases annotated as
+                a sequence of (token, tag) pairs. See fit(X, y) for more 
+                information.
+
+            Attributes
+            ----------
+            model_ : reference to internal pyAhoCorasick Automaton.
         """
         super().__init__()
         self.from_dictionary = from_dictionary
@@ -31,27 +36,16 @@ class DictionaryNER(NERModel):
     def fit(self, X, y):
         """ Build dictionary of phrases of different entity types.
 
-            Args:
-                X (list(list(str))): list of list of tokens or phrases.
-                combine_tokens (bool, default True): if combine tokens
-                    is True, then input is tokenized as individual words.
-                    This would be the expected format if the input came
-                    directly from a training set.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens or phrases.
+            y : list(list(str))
+                list of list of labels.
 
-                        X = [..., [..., "New", "York", "City", ...], ...]
-                        y = [..., [..., "B-loc", "I-loc", "I-loc", ...], ...]
-                    
-                    If combine_tokens is False, then phrases have been 
-                    pre-chunked. This would be the expected format if the 
-                    input came from a third party dictionary.
-                    
-                        X = [..., [..., "New York City", ...], ...]
-                        y = [..., [..., "loc", ...], ...]
-
-                y (list(list(str))): list of list of labels. If combine_tokens
-                    is True, then labels are IOB tags. If combine_tokens is False,
-                    labels are entity types (without leading B and I), and without
-                    any O labels.
+            Returns
+            -------
+            self
         """
         self.model_ = ahocorasick.Automaton()
         if self.from_dictionary:
@@ -67,6 +61,18 @@ class DictionaryNER(NERModel):
 
 
     def predict(self, X):
+        """ Finds matches in text from entries in the Automaton object.
+
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens.
+            
+            Returns
+            -------
+            ypred : list(list(str))
+                list of list of predicted BIO tags.
+        """
         if self.model_ is None:
             raise ValueError("No model found, use fit() to train or load() pretrained.")
         
@@ -91,6 +97,17 @@ class DictionaryNER(NERModel):
 
 
     def save(self, dirpath=None):
+        """ Saves picked automaton object into dirpath.
+
+            Parameters
+            ----------
+            dirpath : str
+                path to directory where model will be saved
+
+            Returns
+            -------
+            None
+        """
         if self.model_ is None:
             raise ValueError("No model found, use fit() to train or load() pretrained.")
 
@@ -103,6 +120,17 @@ class DictionaryNER(NERModel):
 
 
     def load(self, dirpath=None):
+        """ Loads model from disk from dirpath.
+
+            Parameters
+            ----------
+            dirpath : str
+                path to directory where model will be retrieved.
+
+            Returns
+            -------
+            self
+        """
         model_file = os.path.join(dirpath, "dictionary-ner.pkl")
         if not os.path.exists(model_file):
             raise ValueError("Saved model {:s} not found.".format(model_file))
@@ -119,13 +147,19 @@ class DictionaryNER(NERModel):
         """ Combine consecutive word tokens for some given entity type
             to create phrase tokens.
 
-            Args:
-                tokens (list(str)): a list of tokens representing a sentence.
-                labels (list(str)): a list of IOB tags for sentence.
+            Parameters
+            ----------
+            tokens : list(str)
+                a list of tokens representing a sentence.
+            labels : list(str)
+                a list of IOB tags for sentence.
 
-            Returns:
-                phrases (list(str)): list of multi-word phrases.
-                phrase_labels (list(str)): list of phrase entity types.
+            Returns
+            -------
+            phrases : list(str)
+                list of multi-word phrases.
+            phrase_labels : list(str)
+                list of phrase entity types.
         """
         phrases, phrase_labels = [], []
         phrase_tokens = []
@@ -153,13 +187,22 @@ class DictionaryNER(NERModel):
             parts of longer words. This function checks to make sure any
             matches it reports don't do so.
 
-            Args:
-                start_index (int): reported start index of matched phrase.
-                end_index (int): reported end index of matched phrase.
-                tag (str): the entity type.
-                sentence (str): the sentence in which match occurs.
-                matched_phrases (list(str)): list of matched phrases, updated
-                    in place by function.
+            Parameters
+            ----------
+            start_index : int
+                reported start index of matched phrase.
+            end_index : int
+                reported end index of matched phrase.
+            tag : str
+                the entity type.
+            sentence : str
+                the sentence in which match occurs.
+            matched_phrases : list(str)
+                list of matched phrases, updated in place by function.
+
+            Returns
+            -------
+            None
         """
         if start_index == 0:
             if end_index + 1 < len(sentence):
@@ -184,13 +227,16 @@ class DictionaryNER(NERModel):
             phrase to match against. Function stops when we have seen all the
             phrases.
 
-            Args:
-                matched_phrases (list((start, end, iob_tag))): list of 
-                    matched phrase tuples.
-                k (int): starting position.
+            Parameters
+            ----------
+            matched_phrases : list((start, end, iob_tag))
+                list of matched phrase tuples.
+            k : int
+                starting position.
 
-            Returns:
-                matched_phrases: without the shorter subsumed phrase tuples.
+            Returns
+            -------
+            matched_phrases without shorter subsumed phrase tuples.
         """
         if k >= len(matched_phrases):
             return matched_phrases

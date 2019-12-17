@@ -36,21 +36,37 @@ class ElmoNER(NERModel):
             embedding, which is Glove-100 by default. ELMo model is provided by
             the (dev) Anago project.
 
-            Args:
-                entity_label: label for single entity NER, default None
-                word_embedding_dim (int): word embedding dimensions.
-                char_embedding_dim (int): character embedding dimensions.
-                word_lstm_size (int): character LSTM feature extractor output dimensions.
-                char_lstm_size (int): word tagger LSTM output dimensions.
-                fc_dim (int): output fully-connected layer size.
-                dropout (float): dropout rate.
-                embeddings (numpy array): word embedding matrix.
-                embeddings_file (str): path to embedding file.
-                use_char (boolean): add char feature.
-                use_crf (boolean): use crf as last layer.
-                batch_size (int): training batch size.
-                learning_rate (float): learning rate for Adam optimizer.
-                max_iter (int): number of epochs of training.
+            Parameters
+            ----------
+            word_embedding_dim : int, optional, default 100
+                word embedding dimensions.
+            char_embedding_dim : int, optional, default 25
+                character embedding dimensions.
+            word_lstm_size: int, optional, default 100
+                character LSTM feature extractor output dimensions.
+            char_lstm_size : int, optional, default 25
+                word tagger LSTM output dimensions.
+            fc_dim : int, optional, default 100
+                output fully-connected layer size.
+            dropout : float, optional, default 0.5
+                dropout rate.
+            embeddings : numpy array
+                word embedding matrix.
+            embeddings_file : str
+                path to embedding file.
+            batch_size : int, optional, default 16
+                training batch size.
+            learning_rate : float, optional, default 0.001
+                learning rate for Adam optimizer.
+            max_iter : int, optional, default 2
+                number of epochs of training.
+
+            Attributes
+            ----------
+            preprocessor_ : reference to Anago preprocessor.
+            model_ : reference to the internal Anago ELModel
+            trainer_ : reference to the internal Anago Trainer object.
+            tagger_ : reference to the internal Anago Tagger object.
         """
         super().__init__()
         self.word_embedding_dim = word_embedding_dim
@@ -74,9 +90,16 @@ class ElmoNER(NERModel):
     def fit(self, X, y):
         """ Trains the NER model. Input is list of AnnotatedDocuments.
 
-            Args:
-                X list(list(str)): list of list of tokens
-                y list(list(str)): list of list of BIO tags
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens
+            y : list(list(str))
+                list of list of BIO tags
+
+            Returns
+            -------
+            self
         """
         if self.embeddings is None and self.embeddings_file is None:
             raise ValueError("Either embeddings or embeddings_file should be provided, exiting.")
@@ -125,10 +148,15 @@ class ElmoNER(NERModel):
     def predict(self, X):
         """ Predicts using the NER model.
 
-            Args:
-                X list(list(str)): list of list of tokens.
-            Returns:
-                y list(list(str)): list of list of predicted BIO tags.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens.
+            
+            Returns
+            -------
+            y : list(list(str))
+                list of list of predicted BIO tags.
         """
         if self.tagger_ is None:
             raise ValueError("No tagger found, either run fit() to train or load() a trained model")
@@ -141,10 +169,16 @@ class ElmoNER(NERModel):
     def save(self, dirpath):
         """ Saves model to local disk, given a dirpath 
         
-        Args:
-            dirpath (str): a directory where model artifacts will be saved.
-                Model saves a weights.h5 weights file, a params.json parameter
-                file, and a preprocessor.pkl preprocessor file.
+            Parameters
+            -----------
+            dirpath : str
+                a directory where model artifacts will be saved. Model saves a 
+                weights.h5 weights file, a params.json parameter file, and a 
+                preprocessor.pkl preprocessor file.
+
+            Returns
+            -------
+            None
         """
         if self.model_ is None or self.preprocessor_ is None:
             raise ValueError("No model artifacts to save, either run fit() to train or load() a trained model")
@@ -163,8 +197,14 @@ class ElmoNER(NERModel):
     def load(self, dirpath):
         """ Loads a trained model from local disk, given the dirpath
 
-        Args:
-            dirpath (str): a directory where model artifacts are saved.
+            Parameters
+            ----------
+            dirpath : str
+                a directory where model artifacts are saved.
+
+            Returns
+            -------
+            self
         """
         if not os.path.exists(dirpath):
             raise ValueError("Model directory not found: {:s}".format(dirpath))

@@ -18,20 +18,24 @@ class EnsembleNER(NERModel):
             is_pretrained=False):
         """ Constructor for Voting Ensemble NER.
 
-            Args:
-                estimators (list(NERModel, dict(str,obj)), default empty): list 
-                    of (NERModels, fit_param) pairs to use in the ensemble. The
-                    fit_param is a flat dictionary of named arguments used in
-                    fit() for the particular NERModel.
-                weights (list(int), default None): sequence of weights to 
-                    apply to predicted class labels from each estimator. If
-                    None, then predictions from all estimators are treated 
-                    equally.
-                n_jobs (int, default=1): number of jobs to run in parallel, 
-                    default is to single-thread. -1 means to use all available
-                    resources.
-                is_pretrained (bool, default False): if True, estimators are
-                    assumed to be pretrained and fit() is skipped.
+            Parameters
+            ----------
+            estimators : list((str, NERModel))
+                list of (name, NERModel) tuples of models in the ensemble.
+            weights : list(int), optional
+                sequence of weights to apply to predicted class labels from 
+                each estimator. If None, then predictions from all estimators 
+                are weighted equally.
+            n_jobs : int, default=1
+                number of jobs to run in parallel, default is to single-thread. 
+                -1 means to use all available resources.
+            is_pretrained : bool, default False
+                if True, estimators are assumed to be pretrained and fit() 
+                is skipped.
+
+            Attributes
+            ----------
+            None
         """
         super().__init__()
         # these are set by fit and load, required by predict and save
@@ -44,9 +48,16 @@ class EnsembleNER(NERModel):
     def fit(self, X, y):
         """ Train ensemble by training underlying NERModels.
 
-            Args:
-                X (list(list(str))): list of list of tokens.
-                y (list(list(str))): list of list of BIO tags.
+            Parameters
+            ----------
+                X : list(list(str))
+                    list of list of tokens.
+                y : list(list(str))
+                    list of list of BIO tags.
+
+            Returns
+            -------
+                self
         """
         if self.estimators is None or len(self.estimators) == 0:
             raise ValueError("Non-empty list of estimators required to fit ensemble.")
@@ -74,11 +85,15 @@ class EnsembleNER(NERModel):
             predictions using a voting scheme given by the vote() method
             (subclasses can override voting policy by overriding vote()).
 
-            Args:
-                X (list(list(str))): list of list of tokens to predict from.
+            Parameters
+            ----------
+                X : list(list(str))
+                    list of list of tokens to predict from.
 
-            Returns:
-                ypred (list(list(str))): list of list of BIO tags.
+            Returns
+            -------
+                ypred : list(list(str))
+                    list of list of BIO tags predicted by model.
         """
         if self.estimators is None or self.weights is None:
             raise ValueError("Model not ready to predict. Call fit() first, or if using pre-trained models, call fit() with is_pretrained=True")
@@ -111,15 +126,20 @@ class EnsembleNER(NERModel):
         """
             Voting mechanism (can be overriden by subclass if desired).
 
-            Args:
-                predictions (list(list(list(str)))): a list of list of list of BIO
-                    tags predicted by each NER in the ensemble. Each NER outputs
-                    a list of list of BIO tags where the outer list corresponds
-                    to sentences and the inner list corresponds to tokens.
+            Parameters
+            ----------
+                predictions : list(list(list(str)))
+                    List of list of list of BIO tags predicted by each NER in 
+                    the ensemble. Each NER outputs a list of list of BIO tags 
+                    where the outer list corresponds to sentences and the inner 
+                    list corresponds to tokens.
 
-            Returns:
-                voted_predictions (list(list(str))): a list of list of BIO tags.
-                Each BIO tag represents the most frequent tag 
+            Returns
+            -------
+                voted_predictions : list(list(str))
+                    List of list of BIO tags. Output BIO tag at each position
+                    is the one that is predicted by the majority of NERs in 
+                    the ensemble.
         """
         tag2int, int2tag = self._build_label_vocab(predictions)
 

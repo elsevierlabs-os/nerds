@@ -14,7 +14,6 @@ import os
 
 log = get_logger()
 
-
 class BiLstmCrfNER(NERModel):
 
     def __init__(self,
@@ -34,19 +33,39 @@ class BiLstmCrfNER(NERModel):
             level embeddings as well as word embeddings by default. Implementation 
             is provided by the Anago project.
 
-            Args:
-                word_embedding_dim (int): word embedding dimensions.
-                char_embedding_dim (int): character embedding dimensions.
-                word_lstm_size (int): character LSTM feature extractor output dimensions.
-                char_lstm_size (int): word tagger LSTM output dimensions.
-                fc_dim (int): output fully-connected layer size.
-                dropout (float): dropout rate.
-                embeddings (numpy array): word embedding matrix.
-                use_char (boolean): add char feature.
-                use_crf (boolean): use crf as last layer.
-                batch_size (int): training batch size.
-                learning_rate (float): learning rate for Adam optimizer.
-                num_epochs (int): number of epochs of training.
+            Parameters
+            ----------
+            word_embedding_dim : int, optional, default 100
+                word embedding dimensions.
+            char_embedding_dim : int, optional, default 25
+                character embedding dimensions.
+            word_lstm_size : int, optional, default 100
+                character LSTM feature extractor output dimensions.
+            char_lstm_size : int, optional, default 25
+                word tagger LSTM output dimensions.
+            fc_dim : int, optional, default 100
+                output fully-connected layer size.
+            dropout : float, optional, default 0.5
+                dropout rate.
+            embeddings : numpy array
+                word embedding matrix.
+            use_char : bool, optional, default True
+                add char feature.
+            use_crf : bool, optional, default True
+                use crf as last layer.
+            batch_size : int, optional, default 16
+                training batch size.
+            learning_rate : float, optional, default 0.001
+                learning rate for Adam optimizer
+            max_iter : int
+                number of epochs of training
+
+            Attributes
+            ----------
+            preprocessor_ : reference to preprocessor
+            model_ : reference to generated model
+            trainer_ : internal reference to Anago Trainer (model)
+            tagger_ : internal reference to Anago Tagger (predictor)
         """
         super().__init__()
         self.word_embedding_dim = word_embedding_dim
@@ -71,9 +90,16 @@ class BiLstmCrfNER(NERModel):
     def fit(self, X, y):
         """ Trains the NER model. Input is list of AnnotatedDocuments.
 
-            Args:
-                X list(list(str)): list of list of tokens
-                y list(list(str)): list of list of BIO tags
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens
+            y : list(list(str))
+                list of list of BIO tags
+
+            Returns
+            -------
+            self
         """
         log.info("Preprocessing dataset...")
         self.preprocessor_ = IndexTransformer(use_char=self.use_char)
@@ -112,10 +138,15 @@ class BiLstmCrfNER(NERModel):
     def predict(self, X):
         """ Predicts using the NER model.
 
-            Args:
-                X list(list(str)): list of list of tokens.
-            Returns:
-                y list(list(str)): list of list of predicted BIO tags.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens.
+
+            Returns
+            -------
+            y : list(list(str))
+                list of list of predicted BIO tags.
         """
         if self.tagger_ is None:
             raise ValueError("No tagger found, either run fit() to train or load() a trained model")
@@ -128,10 +159,16 @@ class BiLstmCrfNER(NERModel):
     def save(self, dirpath):
         """ Saves model to local disk, given a dirpath 
         
-        Args:
-            dirpath (str): a directory where model artifacts will be saved.
+            Parameters
+            ----------
+            dirpath : str
+                a directory where model artifacts will be saved.
                 Model saves a weights.h5 weights file, a params.json parameter
                 file, and a preprocessor.pkl preprocessor file.
+
+            Returns
+            -------
+            None
         """
         if self.model_ is None or self.preprocessor_ is None:
             raise ValueError("No model artifacts to save, either run fit() to train or load() a trained model")
@@ -150,8 +187,14 @@ class BiLstmCrfNER(NERModel):
     def load(self, dirpath):
         """ Loads a trained model from local disk, given the dirpath
 
-        Args:
-            dirpath (str): a directory where model artifacts are saved.
+            Parameters
+            ----------
+            dirpath : str
+                a directory where model artifacts are saved.
+
+            Returns
+            -------
+            self
         """
         if not os.path.exists(dirpath):
             raise ValueError("Model directory not found: {:s}".format(dirpath))

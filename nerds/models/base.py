@@ -35,6 +35,19 @@ class NERModel(BaseEstimator, ClassifierMixin):
     def score(self, X, y, sample_weights=None):
         """ Returns score for the model based on predicting on (X, y).  This 
             method is needed for GridSearch like operations.
+
+            Parameters
+            ----------
+            X : list(list(str))
+                list of list of tokens.
+            y : list(list(str))
+                list of list of tags
+            sample_weights : list(float), not used
+
+            Returns
+            -------
+            score: float
+                numeric score for estimator.
         """
         y_pred = self.predict(X)
         return accuracy_score(flatten_list(y), flatten_list(y_pred))

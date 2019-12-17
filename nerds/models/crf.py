@@ -19,17 +19,24 @@ class CrfNER(NERModel):
         """ Construct a Conditional Random Fields (CRF) based NER. Implementation
             of CRF NER is provided by sklearn.crfsuite.CRF.
 
-            Args:
-                max_iter (int, default 100): maximum number of iterations to run
-                    CRF training
-                c1 (float, default 0.1): L1 regularization coefficient.
-                c2 (float, default 0.1): L2 regularization coefficient.
-                featurizer (function, default None): if None, the default featurizer
-                    _sent2features() is used to convert list of tokens for each
-                    sentence to a list of features, where each feature is a dictionary
-                    of name-value pairs. For custom features, a featurizer function must
-                    be provided that takes in a list of tokens (sentence) and returns a
-                    list of features.
+            Parameters
+            ----------
+            max_iter : int, optional, default 100
+                maximum number of iterations to run CRF training
+            c1 : float, optional, default 0.1
+                L1 regularization coefficient.
+            c2 : float, optional, default 0.1
+                L2 regularization coefficient.
+            featurizer : function, default None
+                if None, the default featurizer _sent2features() is used to convert 
+                list of tokens for each sentence to a list of features, where each 
+                feature is a dictionary of name-value pairs. For custom features, a 
+                featurizer function must be provided that takes in a list of tokens 
+                (sentence) and returns a list of features.
+
+            Attributes
+            ----------
+            model_ : reference to the internal sklearn_crfsuite.CRF model.
         """
         super().__init__()
         self.max_iter = max_iter
@@ -42,16 +49,19 @@ class CrfNER(NERModel):
     
     def fit(self, X, y):
         """ Build feature vectors and train CRF model. Wrapper for 
-            sklearn_crfsuite.CRF model. The underlying model takes many
-            parameters (for full list (and possible future enhancement), see
-            https://sklearn-crfsuite.readthedocs.io/en/latest/_modules/sklearn_crfsuite/estimator.html#CRF)
+            sklearn_crfsuite.CRF model.
 
-            Args:
-                X (list(list(str))) or (list(list(dict(str, str)))): list of 
-                    sentences or features. Sentences are tokenized into list 
-                    of words, and features are a list of word features, each
-                    word feature is a dictionary of name-value pairs.
-                y (list(list(str))): list of list of BIO tags.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of sentences. Sentences are tokenized into list 
+                of words.
+            y : list(list(str))
+                list of list of BIO tags.
+
+            Returns
+            -------
+            self
         """
         if self.featurizer is None:
             features = [self._sent2features(sent) for sent in X]
@@ -76,13 +86,15 @@ class CrfNER(NERModel):
     def predict(self, X):
         """ Predicts using trained CRF model.
 
-            Args:
-                X (list(list(dict(str, str))) or list(list(str))): list
-                of sentences or features.
-                is_featurized (bool, default False): if True, X is a list
-                    of list of features, else X is a list of list of tokens.
-            Returns:
-                y (list(list(str))): list of list of predicted BIO tags.
+            Parameters
+            ----------
+            X : list(list(dict(str, str))
+                list of sentences. Sentences are tokenized into list of words.
+
+            Returns
+            -------
+            y : list(list(str))
+                list of list of predicted BIO tags.
         """
         if self.model_ is None:
             raise ValueError("CRF model not found, run fit() to train or load() pre-trained model")
@@ -98,8 +110,14 @@ class CrfNER(NERModel):
     def save(self, dirpath):
         """ Save a trained CRF model at dirpath.
 
-            Args:
-                dirpath (str): path to model directory.
+            Parameters
+            ----------
+            dirpath : str
+                path to model directory.
+
+            Returns
+            -------
+            None
         """
         if self.model_ is None:
             raise ValueError("No model to save, run fit() to train or load() pre-trained model")
@@ -114,10 +132,14 @@ class CrfNER(NERModel):
     def load(self, dirpath):
         """ Load a pre-trained CRF model from dirpath.
 
-            Args:
-                dirpath (str): path to model directory.
-            Returns:
-                this object populated with pre-trained model.
+            Parameters
+            -----------
+            dirpath : str
+                path to model directory.
+            
+            Returns
+            --------
+            self
         """
         model_file = os.path.join(dirpath, "crf-model.pkl")
         if not os.path.exists(model_file):
@@ -135,12 +157,16 @@ class CrfNER(NERModel):
         """ Converts a list of tokens to a list of features for CRF.
             Each feature is a dictionary of feature name value pairs.
 
-            Args:
-                sent (list(str)): a list of tokens representing a sentence.
+            Parameters
+            ----------
+            sent : list(str))
+                a list of tokens representing a sentence.
 
-            Returns:
-                feats (list(dict(str, obj))): a list of features, where each
-                    feature is a dictionary of name-value pairs.
+            Returns
+            -------
+            feats : list(dict(str, obj))
+                a list of features, where each feature represents a token
+                as a dictionary of name-value pairs.
         """
         if self._nlp is None:
             self._nlp = self._load_language_model()

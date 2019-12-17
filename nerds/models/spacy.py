@@ -20,11 +20,18 @@ class SpacyNER(NERModel):
         """ Construct a SpaCy based NER. The SpaCy library provides an EntityRecognizer 
             class to do Named Entity Recognition.
 
-            Args:
-                dropout (float): rate of dropout during training between 0 and 1.
-                max_iter (int): number of epochs of training.
-                batch_size (int): batch size to use during training
+            Parameters
+            ----------
+            dropout : float, optional, default 0.1
+                rate of dropout during training between 0 and 1.
+            max_iter : int, optional, default 20
+                number of epochs of training.
+            batch_size : int, optional, default 32
+                batch size to use during training
 
+            Attributes
+            ----------
+            model_ : reference to internal SpaCy EntityRecognizer model.
         """
         super().__init__()
         self.dropout = dropout
@@ -37,10 +44,16 @@ class SpacyNER(NERModel):
     def fit(self, X, y):
         """ Trains the SpaCy NER model.
 
-            Args:
-                X (list(list(str))): list of tokenized sentences, or list of list
-                    of tokens.
-                y (list(list(str))): list of list of BIO tags.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of tokenized sentences, or list of list of tokens.
+            y : list(list(str))
+                list of list of BIO tags.
+
+            Returns
+            -------
+            self
         """
         log.info("Reformatting data to SpaCy format...")
         features = [self._convert_to_spacy(tokens, labels) 
@@ -87,12 +100,15 @@ class SpacyNER(NERModel):
     def predict(self, X):
         """ Predicts using trained SpaCy NER model.
 
-            Args:
-                X (list(list(str))): list of tokenized sentences.
-                is_featurized (bool, default False): if True, X is a list
-                    of list of features, else X is a list of list of tokens.
-            Returns:
-                y (list(list(str))): list of list of predicted BIO tags.
+            Parameters
+            ----------
+            X : list(list(str))
+                list of tokenized sentences.
+
+            Returns
+            -------
+            y : list(list(str))
+                list of list of predicted BIO tags.
         """
         if self.model_ is None:
             raise ValueError("Cannot predict with empty model, run fit() to train or load() pretrained model.")
@@ -111,8 +127,14 @@ class SpacyNER(NERModel):
     def save(self, dirpath):
         """ Save trained SpaCy NER model at dirpath.
 
-            Args:
-                dirpath (str): path to model directory.
+            Parameters
+            ----------
+            dirpath : str
+                path to model directory.
+
+            Returns
+            -------
+            None
         """
         if self.model_ is None:
             raise ValueError("Cannot save empty model, run fit() to train or load() pretrained model")
@@ -126,10 +148,14 @@ class SpacyNER(NERModel):
     def load(self, dirpath):
         """ Load a pre-trained SpaCy NER model from dirpath.
 
-            Args:
-                dirpath (str): path to model directory.
-            Returns:
-                this object populated with pre-trained model.
+            Parameters
+            ----------
+            dirpath : str
+                path to model directory.
+            
+            Returns
+            -------
+            self
         """
         if not os.path.exists(dirpath):
             raise ValueError("Model directory {:s} not found".format(dirpath))
@@ -142,11 +168,15 @@ class SpacyNER(NERModel):
     def _convert_to_spacy(self, tokens, labels):
         """ Convert data and labels for single sentence to SpaCy specific format:
 
-            Args:
-                tokens (list(str)): list of tokens.
-                labels (list(str)): list of BIO tags.
+            Parameters
+            ----------
+            tokens : list(str)
+                list of tokens.
+            labels : list(str)
+                list of BIO tags.
 
-            Returns:
+            Returns
+            --------
                 list of tuples in SpaCy format as shown below:
                 (
                     "The quick brown fox jumps over the lazy dog",
@@ -165,14 +195,17 @@ class SpacyNER(NERModel):
     def _convert_from_spacy(self, sent, entities):
         """ Converts SpaCy predictions to standard form.
 
-            Args:
-                sent (str): the sentence as a string.
-                entities (list(entities)): a list of SpaCy Entity objects
-                Entity(start_char, end_char, label_).
+            Parameters
+            ----------
+            sent : str
+                the sentence as a string.
+            entities : list(entities)
+                a list of SpaCy Entity(start_char, end_char, label_) objects.
 
-            Returns:
-                predictions (list(str)): a list of BIO tags for a single
-                    sentence.
+            Returns
+            -------
+            predictions : list(str)
+                a list of BIO tags for a single sentence.
         """
         spans = [(e.start_char, e.end_char, e.label_) for e in entities]
         tokens, tags = spans_to_tokens(sent, spans, self._spacy_lm, 
