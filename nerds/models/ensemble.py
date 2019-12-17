@@ -1,6 +1,8 @@
 from nerds.models import NERModel
 from nerds.utils import get_logger
 
+from sklearn.preprocessing import LabelEncoder
+
 import joblib
 import numpy as np
 import os
@@ -152,13 +154,13 @@ class EnsembleNER(NERModel):
 
     def _build_label_vocab(self, predictions):
         """ build lookup table from token to int and back (for performance) """
-        tag2int, int2tag = {}, {}
-        tok_int = 1
+        tags, tag2int, int2tag = [], {}, {}
+        label_encoder = LabelEncoder()
         for est_pred in predictions:
             for sent_pred in est_pred:
                 for tok_pred in sent_pred:
-                    if tok_pred not in tag2int.keys():
-                        tag2int[tok_pred] = tok_int
-                        tok_int += 1
-        int2tag = {v:k for k, v in tag2int.items()}
+                    tags.append(tok_pred)
+        label_encoder.fit(tags)
+        tag2int = {t:i for i, t in enumerate(label_encoder.classes_)}
+        int2tag = {i:t for t, i in tag2int.items()}
         return tag2int, int2tag
