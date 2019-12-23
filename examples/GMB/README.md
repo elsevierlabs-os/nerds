@@ -23,7 +23,7 @@ We train with the full set of data, and the entire run across all the provided m
 
 ## Results
 
-### Dictionary NER 
+### Dictionary NER (from_dictionary=False)
 
 ```
               precision    recall  f1-score   support
@@ -42,7 +42,7 @@ We train with the full set of data, and the entire run across all the provided m
 weighted avg       0.48      0.77      0.55     48418
 ```
 
-### CRF NER (max_iterations=100, c1=0.1, c2=0.1)
+### CRF NER (c1=0.1, c2=0.1, max_iter=100, featurizer=Default)
 
 ```
               precision    recall  f1-score   support
@@ -64,7 +64,7 @@ weighted avg       0.87      0.85      0.86     48418
 
 The entity types which have enough examples have good results!
 
-### SpaCy NER (num_epochs=20, dropout=0.1)
+### SpaCy NER (dropout=0.1, max_iter=20, batch_size=32)
 
 ```
               precision    recall  f1-score   support
@@ -84,7 +84,7 @@ weighted avg       0.87      0.85      0.86     48418
 
 ```
 
-### BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, num_epochs=10)
+### BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, max_iter=10)
 
 ```
               precision    recall  f1-score   support
@@ -104,7 +104,7 @@ weighted avg       0.86      0.85      0.85     48418
 
 ```
 
-### ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, num_epochs=2)
+### ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, max_iter=2)
 
 ```
               precision    recall  f1-score   support
@@ -121,6 +121,26 @@ weighted avg       0.86      0.85      0.85     48418
    micro avg       0.87      0.87      0.87     48418
    macro avg       0.70      0.65      0.66     48418
 weighted avg       0.87      0.87      0.86     48418
+
+```
+
+### FLAIR NER (hidden_dim=256, embeddings=StackedEmbeddings(WordEmbeddings("glove"), CharEmbeddings()), use_crf=True, use_rnn=True, num_rnn_layers=1, dropout=0.0, word_dropout=0.05, locked_dropout=0.5, optimizer="sgd", learning_rate=0.1, batch_size=32, max_iter=10)
+
+```
+              precision    recall  f1-score   support
+
+         art       0.00      0.00      0.00       215
+         eve       0.71      0.20      0.31       169
+         geo       0.84      0.91      0.87     13724
+         gpe       0.95      0.92      0.94      4850
+         nat       0.50      0.06      0.11        94
+         org       0.85      0.67      0.75     10884
+         per       0.84      0.92      0.88     10342
+         tim       0.90      0.88      0.89      8140
+
+   micro avg       0.86      0.84      0.85     48418
+   macro avg       0.70      0.57      0.59     48418
+weighted avg       0.86      0.84      0.85     48418
 
 ```
 

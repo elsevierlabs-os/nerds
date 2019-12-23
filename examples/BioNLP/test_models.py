@@ -6,7 +6,8 @@ from sklearn.metrics import classification_report
 from sklearn.utils import shuffle
 
 from nerds.models import (
-    DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, ElmoNER, EnsembleNER
+    DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, 
+    ElmoNER, FlairNER, EnsembleNER
 )
 from nerds.utils import *
 
@@ -73,6 +74,17 @@ if os.path.exists("glove.6B.100d.txt"):
                                 flatten_list(ypred, strip_prefix=True),
                                 labels=entity_labels))
 
+# train and test the FLAIR NER
+model = FlairNER("models/flair_model")
+model.fit(xtrain, ytrain)
+model.save("models/flair_model")
+trained_model = model.load("models/flair_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
+
+
 # create and test an ensemble
 dict_model = DictionaryNER()
 dict_model.load("models/dict_model")
@@ -82,15 +94,13 @@ spacy_model = SpacyNER()
 spacy_model.load("models/spacy_model")
 bilstm_model = BiLstmCrfNER()
 bilstm_model.load("models/bilstm_model")
-model = EnsembleNER()
-model.fit(xtrain, ytrain, 
-    estimators=[
-        (dict_model, {}),
-        (crf_model, {}),
-        (spacy_model, {}),
-        (bilstm_model, {})
-    ],
-    is_pretrained=True)
+estimators = [
+    ("dict_model", dict_model),
+    ("crf_model", crf_model),
+    ("spacy_model", spacy_model),
+    ("bilstm_model", bilstm_model)
+]
+model = EnsembleNER(estimators=estimators, is_pretrained=True)
 ypred = model.predict(xtest)
 print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),

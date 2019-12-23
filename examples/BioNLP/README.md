@@ -22,7 +22,7 @@ Our example will use the `data/train/Genia4ERtask1.iob2` file for training, and 
 
 ## Results
 
-### Dictionary NER
+### Dictionary NER (from_dictionary=False)
 
 ```
               precision    recall  f1-score   support
@@ -38,7 +38,7 @@ Our example will use the `data/train/Genia4ERtask1.iob2` file for training, and 
 weighted avg       0.70      0.61      0.65     19392
 ```
 
-### CRF NER (max_iterations=100, c1=0.1, c2=0.1)
+### CRF NER (c1=0.1, c2=0.1, max_iter=100, featurizer=Default)
 
 ```
               precision    recall  f1-score   support
@@ -54,7 +54,7 @@ weighted avg       0.70      0.61      0.65     19392
 weighted avg       0.79      0.76      0.77     19392
 ```
 
-### SpaCy NER (num_epochs=20, dropout=0.1)
+### SpaCy NER (dropout=0.1, max_iter=20, batch_size=32)
 
 ```
               precision    recall  f1-score   support
@@ -70,7 +70,7 @@ weighted avg       0.79      0.76      0.77     19392
 weighted avg       0.79      0.78      0.78     19392
 ```
 
-### BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, num_epochs=10)
+### BiLSTM-CRF NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, use_char=True, use_crf=True, batch_size=16, learning_rate=0.001, max_iter=10)
 
 ```
               precision    recall  f1-score   support
@@ -86,7 +86,7 @@ weighted avg       0.79      0.78      0.78     19392
 weighted avg       0.79      0.77      0.78     19392
 ```
 
-### ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, num_epochs=2)
+### ELMo NER (word_embedding_dim=100, char_embedding_dim=25, word_lstm_size=100, char_lstm_size=25, fc_dim=100, dropout=0.5, embeddings=None, embeddings_file="glove.6B.100d.txt", batch_size=16, learning_rate=0.001, max_iter=2)
 
 ```
               precision    recall  f1-score   support
@@ -100,6 +100,23 @@ weighted avg       0.79      0.77      0.78     19392
    micro avg       0.78      0.82      0.80     19392
    macro avg       0.74      0.81      0.77     19392
 weighted avg       0.79      0.82      0.80     19392
+```
+
+### FLAIR NER (hidden_dim=256, embeddings=StackedEmbeddings(WordEmbeddings("glove"), CharEmbeddings()), use_crf=True, use_rnn=True, num_rnn_layers=1, dropout=0.0, word_dropout=0.05, locked_dropout=0.5, optimizer="sgd", learning_rate=0.1, batch_size=32, max_iter=10)
+
+```
+              precision    recall  f1-score   support
+
+   cell_line       0.47      0.75      0.58      1489
+   cell_type       0.88      0.63      0.74      4912
+     protein       0.82      0.77      0.80      9841
+         DNA       0.79      0.76      0.77      2845
+         RNA       0.76      0.80      0.78       305
+
+   micro avg       0.78      0.73      0.76     19392
+   macro avg       0.74      0.74      0.73     19392
+weighted avg       0.80      0.73      0.76     19392
+
 ```
 
 ### Majority voting ensemble (pre-trained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
