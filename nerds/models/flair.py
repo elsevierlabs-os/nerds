@@ -163,7 +163,7 @@ class FlairNER(NERModel):
 
 
     def save(self, dirpath):
-        """ Save trained SpaCy NER model at dirpath.
+        """ Save trained FLAIR NER model at dirpath.
 
             Parameters
             ----------
@@ -183,7 +183,7 @@ class FlairNER(NERModel):
 
 
     def load(self, dirpath):
-        """ Load a pre-trained SpaCy NER model from dirpath.
+        """ Load a pre-trained FLAIR NER model from dirpath.
 
             Parameters
             ----------
