@@ -88,7 +88,7 @@ class CrfNER(NERModel):
 
             Parameters
             ----------
-            X : list(list(dict(str, str))
+            X : list(list(str))
                 list of sentences. Sentences are tokenized into list of words.
 
             Returns
