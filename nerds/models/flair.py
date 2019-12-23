@@ -84,8 +84,7 @@ class FlairNER(NERModel):
 
 
     def fit(self, X, y):
-        """ Build feature vectors and train CRF model. Wrapper for 
-            sklearn_crfsuite.CRF model.
+        """ Build feature vectors and train FLAIR model.
 
             Parameters
             ----------
@@ -138,7 +137,7 @@ class FlairNER(NERModel):
 
 
     def predict(self, X):
-        """ Predicts using trained CRF model.
+        """ Predicts using trained FLAIR model.
 
             Parameters
             ----------
