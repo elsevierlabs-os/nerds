@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from torch.optim import SGD, Adam
 
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, write_param_file
 
 log = get_logger()
 
@@ -179,7 +179,9 @@ class FlairNER(NERModel):
 
         if not(os.path.exists(dirpath) and os.path.isdir(dirpath)):
             os.makedirs(dirpath)
-        self.model_.save(os.path.join(dirpath, "final-model.pt"))        
+        self.model_.save(os.path.join(dirpath, "final-model.pt"))
+
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))   
 
 
     def load(self, dirpath):

@@ -7,7 +7,7 @@ from anago.tagger import Tagger
 from keras.optimizers import Adam
 
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, write_param_file
 
 from sklearn.model_selection import train_test_split
 
@@ -192,6 +192,8 @@ class ElmoNER(NERModel):
 
         save_model(self.model_, weights_file, params_file)
         self.preprocessor_.save(preprocessor_file)
+
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))
 
 
     def load(self, dirpath):

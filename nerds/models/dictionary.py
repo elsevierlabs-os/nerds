@@ -1,5 +1,5 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger, spans_to_tokens
+from nerds.utils import get_logger, spans_to_tokens, write_param_file
 
 import ahocorasick
 import joblib
@@ -117,6 +117,8 @@ class DictionaryNER(NERModel):
         log.info("Saving model...")
         model_file = os.path.join(dirpath, "dictionary-ner.pkl")
         joblib.dump(self.model_, model_file)
+
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))
 
 
     def load(self, dirpath=None):

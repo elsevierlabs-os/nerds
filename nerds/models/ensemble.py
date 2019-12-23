@@ -1,5 +1,5 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, write_param_file
 
 from sklearn.preprocessing import LabelEncoder
 
@@ -105,12 +105,12 @@ class EnsembleNER(NERModel):
         return self._vote(predictions)
 
 
-    def load(model_dirpath):
+    def load(dirpath):
         raise NotImplementedError()
 
 
-    def save(model_dirpath):
-        raise NotImplementedError()
+    def save(dirpath):
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))
 
 
     def _fit_estimator(self, estimator, X, y):

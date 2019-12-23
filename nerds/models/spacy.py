@@ -1,5 +1,6 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger, spans_to_tokens, tokens_to_spans
+from nerds.utils import (get_logger, write_param_file,
+    spans_to_tokens, tokens_to_spans)
 
 from spacy.util import minibatch
 
@@ -143,6 +144,8 @@ class SpacyNER(NERModel):
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         self.model_.to_disk(dirpath)
+
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))
 
 
     def load(self, dirpath):

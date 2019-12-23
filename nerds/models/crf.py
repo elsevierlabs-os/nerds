@@ -1,5 +1,5 @@
 from nerds.models import NERModel
-from nerds.utils import get_logger
+from nerds.utils import get_logger, write_param_file
 
 import os
 import joblib
@@ -127,6 +127,8 @@ class CrfNER(NERModel):
 
         model_file = os.path.join(dirpath, "crf-model.pkl")
         joblib.dump(self.model_, model_file)
+
+        write_param_file(self.get_params(), os.path.join(dirpath, "params.yaml"))
 
 
     def load(self, dirpath):

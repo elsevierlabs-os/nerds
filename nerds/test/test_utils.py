@@ -1,7 +1,9 @@
 from nose.tools import assert_equal, assert_true
 
 from nerds.utils import *
+from nerds.models import CrfNER
 
+import os
 import spacy
 
 spacy_lm = spacy.load("en")
@@ -11,6 +13,18 @@ def test_load_data_and_labels():
     assert_true(len(X) == 2, "There should be 2 sentences in X")
     assert_equal(len(X), len(y), "There should be tags for 2 sentences in y")
     assert_equal(len(X[0]), len(y[0]), "Number of tokens should be equal to number of tags")
+
+
+def test_write_param_file():
+    model = CrfNER()
+    param_filepath = "nerds/test/data/crf_params.yaml"
+    write_param_file(model.get_params(), param_filepath)
+    lines = []
+    with open(param_filepath, "r") as fp:
+        for line in fp:
+            lines.append(line.strip())
+    assert_equal(4, len(lines))
+    os.remove(param_filepath)
 
 
 def test_flatten_and_unflatten_list():
