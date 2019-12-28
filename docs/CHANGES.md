@@ -27,6 +27,8 @@
       * does not give timestep size errors
   * ElmoNER
     * New, available in Anago DEV repo, same API as Anago's BiLSTMCRF
+  * FLAIR based NER
+    * New, incorporated from the [Zalando Flair project](https://github.com/flairNLP/flair).
   * EnsembleNER
     * simpler interface 
     * weights from each classifier
@@ -45,5 +47,4 @@
 ## Planned
 
 * BERT Transformer based NER
-* FLAIR based NER
 

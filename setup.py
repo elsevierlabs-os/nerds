@@ -6,6 +6,7 @@ setup(
     install_requires=[
         'allennlp',
         'anago @ git+https://github.com/Hironsan/anago.git',
+        'flair',
         'future',
         'h5py',
         'hyperopt',
