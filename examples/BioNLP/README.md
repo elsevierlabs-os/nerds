@@ -1,6 +1,6 @@
 # Dataset description
 
-Data comes from the [Report on Bio-Entity Recognition Task at BioNLP/NLPBA 2004](http://www.nactem.ac.uk/tsujii/GENIA/ERtask/report.html) page. The page describes the provenance and characteristics of the data. 
+Data comes from the [GENIA Project page for BioNLP / JNLPBA Shared Task 2004](http://www.geniaproject.org/shared-tasks/bionlp-jnlpba-shared-task-2004). The page describes the provenance and characteristics of the data. 
 
 In addition, [GloVe (Global Vectors for Word Representation) vectors](https://nlp.stanford.edu/projects/glove/) are needed to run the ElmoNER model.
 
