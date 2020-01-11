@@ -88,7 +88,7 @@ class BiLstmCrfNER(NERModel):
 
 
     def fit(self, X, y):
-        """ Trains the NER model. Input is list of AnnotatedDocuments.
+        """ Trains the NER model. Input is list of list of tokens and tags.
 
             Parameters
             ----------
