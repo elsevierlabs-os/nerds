@@ -6,13 +6,13 @@ mkdir train test
 
 echo "Downloading training data..."
 cd train
-curl -O http://www.nactem.ac.uk/tsujii/GENIA/ERtask/Genia4ERtraining.tar.gz
+curl -O http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz
 tar xvf Genia4ERtraining.tar.gz
 rm Genia4ERtraining.tar.gz
 
 echo "Downloading test data..."
 cd ../test
-curl -O http://www.nactem.ac.uk/tsujii/GENIA/ERtask/Genia4ERtest.tar.gz
+curl -O http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz
 tar xvf Genia4ERtest.tar.gz
 rm Genia4ERtest.tar.gz
 
