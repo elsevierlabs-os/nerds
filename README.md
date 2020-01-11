@@ -134,3 +134,5 @@ The [CHANGES.md file](docs/CHANGES.md) lists the changes and improvements that w
 # Talks and Blogs
 
 * \[slides\] [Slides for talk at PyData LA 2019](https://www.slideshare.net/sujitpal/building-named-entity-recognition-models-efficiently-using-nerds).
+* \[video\] [Video of talk at PyData LA 2019](https://www.youtube.com/watch?v=ilzFiK0nAh8).
+* \[blog\] [Incorporating third party NER (Flair) into NERDS](https://sujitpal.blogspot.com/2019/12/incorporating-flair-ner-into-nerds.html).
