@@ -5,7 +5,7 @@ from nerds.utils import load_data_and_labels
 
 import shutil
 
-def test_crf_ner():
+def test_bilstm_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
     model = BiLstmCrfNER(max_iter=1)
     model.fit(X, y)

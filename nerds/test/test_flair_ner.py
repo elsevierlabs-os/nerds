@@ -1,12 +1,12 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from nose.tools import assert_equal, assert_true
 
 from nerds.models import FlairNER
 from nerds.utils import load_data_and_labels
 
 import shutil
-
-import warnings
-warnings.filterwarnings("ignore")
 
 def test_flair_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")

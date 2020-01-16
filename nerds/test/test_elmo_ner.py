@@ -6,7 +6,7 @@ from nerds.utils import load_data_and_labels
 import numpy as np
 import shutil
 
-def test_crf_ner():
+def test_elmo_ner():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
     # there are 28 unique words in our "vocabulary"
     embeddings = np.random.random((28, 100))
