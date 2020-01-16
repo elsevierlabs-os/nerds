@@ -8,9 +8,10 @@ from sklearn.utils import shuffle
 
 from nerds.models import (
     DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, 
-    ElmoNER, FlairNER, EnsembleNER
+    ElmoNER, FlairNER, BertNER, EnsembleNER
 )
 from nerds.utils import *
+
 
 def convert_to_iob_format(input_file, output_file):
     num_written = 0
@@ -31,7 +32,8 @@ def convert_to_iob_format(input_file, output_file):
     fout.write("\n")
     fout.close()
 
-# convert Kaggle dataset to our standard IOB format
+
+# convert GMB dataset to our standard IOB format
 if not os.path.exists("train.iob"):
     convert_to_iob_format("train.csv", "train.iob")
 
@@ -111,6 +113,16 @@ model = FlairNER("models/flair_model")
 model.fit(xtrain, ytrain)
 model.save("models/flair_model")
 trained_model = model.load("models/flair_model")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
+
+# train and test the BERT NER
+model = BertNER()
+model.fit(xtrain, ytrain)
+model.save("models/bert_model")
+trained_model = model.load("models/bert_model")
 ypred = trained_model.predict(xtest)
 print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),

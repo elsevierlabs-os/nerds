@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 
 from nerds.models import (
     DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, 
-    ElmoNER, FlairNER, EnsembleNER
+    ElmoNER, FlairNER, BertNER, EnsembleNER
 )
 from nerds.utils import *
 
@@ -84,6 +84,15 @@ print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),
                             labels=entity_labels))
 
+# train and test the BERT NER
+model = BertNER(max_sequence_length=256)
+model.fit(xtrain, ytrain)
+model.save("models/bert_ner")
+trained_model = model.load("models/bert_ner")
+ypred = trained_model.predict(xtest)
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
 
 # create and test an ensemble
 dict_model = DictionaryNER()
