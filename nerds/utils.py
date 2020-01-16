@@ -16,7 +16,7 @@ def get_logger(log_level="DEBUG"):
     return logger
 
 
-def load_data_and_labels(filepath):
+def load_data_and_labels(filepath, encoding="utf-8"):
     """ Wrapper to expose anago's load_data_and_labels. Built here as
         a wrapper because users of non-neural models are not expected
         to be familiar with Anago.
@@ -25,7 +25,10 @@ def load_data_and_labels(filepath):
         ----------
         filepath : str
             path to the file in BIO format to be loaded.
-        
+        encoding : str, default utf-8
+            a standard python encodings, see:
+            https://docs.python.org/2.4/lib/standard-encodings.html
+
         Returns
         -------
         x : list(list(str))
@@ -33,7 +36,7 @@ def load_data_and_labels(filepath):
         y : list(str))
             list of list of tags.
     """
-    return anago.utils.load_data_and_labels(filepath)
+    return anago.utils.load_data_and_labels(filepath, encoding)
 
 
 def write_param_file(param_dict, param_filepath):
