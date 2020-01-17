@@ -29,6 +29,7 @@ class BertNER(NERModel):
             learning_rate=2e-5,
             batch_size=32,
             max_iter=4,
+            padding_tag="O",
             verbose=False,
             random_state=42):
         """ Construct a BERT NER model. Uses a pretrained BERT language model
@@ -49,6 +50,8 @@ class BertNER(NERModel):
                 batch size to use for training.
             max_iter : int, default 4
                 number of epochs to fine tune.
+            padding_tag : str, default "O"
+                tag to pad predictions with if len(tokens) > len(predicted_tags).
             verbose : bool, optional, default False
                 whether to display log messages on console.
             random_state : int, optional, default 42
@@ -71,6 +74,7 @@ class BertNER(NERModel):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.max_iter = max_iter
+        self.padding_tag = padding_tag
         self.verbose = verbose
         self.random_state = random_state
         self._set_random_state(random_state)
@@ -199,7 +203,13 @@ class BertNER(NERModel):
 
 
     def predict(self, X):
-        """ Predicts using the NER model.
+        """ Predicts using the NER model. Note that because of the
+            way BERT re-tokenizes incoming tokens to word-pieces, it
+            is possible that some incoming tokens may not be presented
+            to the model for NER tagging, and hence the list of predicted
+            tags will padded with a pseudo-tag (default 'O'). If you chose
+            a different pseudo-tag, you will need to re-align labels and
+            predictions using nerds.utils.align_lists().
 
             Parameters
             ----------
@@ -381,11 +391,13 @@ class BertNER(NERModel):
                     tokens_sent.extend(subwords)
                 tags_sent.append(self.label2id_[tag])
                 if len(subwords) > 1:
-                    # repeat tag for all subwords following the specified word, see
-                    # https://github.com/google-research/bert/issues/646#issuecomment-519868110
-                    if tag.startswith("B-"):
-                        tag = tag.replace("B-", "I-")
-                    tags_sent.extend([self.label2id_[tag]] * (len(subwords) - 1))
+                    tags_sent.extend([self._pad_label_id] * (len(subwords) - 1))
+                # if len(subwords) > 1:
+                #     # repeat tag for all subwords following the specified word, see
+                #     # https://github.com/google-research/bert/issues/646#issuecomment-519868110
+                #     if tag.startswith("B-"):
+                #         tag = tag.replace("B-", "I-")
+                #     tags_sent.extend([self.label2id_[tag]] * (len(subwords) - 1))
 
             # truncate to max_sequence_length - 2 (account for special tokens CLS and SEP)
             tokens_sent = tokens_sent[0:self.max_sequence_length - 2]
@@ -497,7 +509,7 @@ class BertNER(NERModel):
                 # pad any truncated sentences with [PAD]/O
                 num_pad_tokens = len(tokens) - len(tokens_r)
                 tokens_r.extend([self.tokenizer_.pad_token] * num_pad_tokens)
-                preds_r.extend(["O"] * num_pad_tokens)
+                preds_r.extend([self.padding_tag] * num_pad_tokens)
 
             data_a.append(tokens_r)
             preds_a.append(preds_r)

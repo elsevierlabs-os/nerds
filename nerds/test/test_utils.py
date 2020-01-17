@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from nose.tools import assert_equal, assert_true
 
 from nerds.utils import *
@@ -29,7 +32,7 @@ def test_write_param_file():
 
 def test_flatten_and_unflatten_list():
     X, y = load_data_and_labels("nerds/test/data/example.iob")
-    yflat = flatten_list(y, strip_prefix=True, capture_lengths=True)
+    yflat = flatten_list(y, strip_prefix=True)
     assert_equal(36, len(yflat), "There should be 36 tags in all")
     assert_equal(5, len([y for y in yflat if y == "PER"]), "There should be 5 PER tags")
     y_lengths = compute_list_lengths(y)
@@ -98,3 +101,21 @@ def test_spans_to_tokens_no_multiword_spans():
     for ref_pred, pred in zip(ref_preds, tags):
         assert_equal(ref_pred, pred, "Tags do not match. {:s} != {:s}".format(ref_pred, pred))
 
+
+def align_lists_padded():
+    labels = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
+    preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'X', 'X', 'X', 'X']
+    assert_equal(len(labels), len(preds))
+    labels_a, preds_a = align_lists(labels, preds, padding_tag="X")
+    assert_equal(len(labels_a), len(preds_a))
+    assert_equal(len(labels_a), len(labels) - 4)
+
+
+def align_lists_unpadded():
+    labels = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
+    preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O']
+    assert_true(len(labels) > len(preds))
+    labels_a, preds_a = align_lists(labels, preds)
+    assert_equal(len(labels_a), len(preds_a))
+    assert_equal(len(preds_a), len(preds))
+    assert_equal(len(labels_a), len(labels) - 4)

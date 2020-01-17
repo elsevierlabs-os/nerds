@@ -61,7 +61,7 @@ def write_param_file(param_dict, param_filepath):
         fp.write(yaml.dump(param_dict))
 
 
-def flatten_list(xs, strip_prefix=True, capture_lengths=False):
+def flatten_list(xs, strip_prefix=True):
     """ Flatten label or predictions from list(list(str)) to list(str).
         Flattened list can be input to scikit-learn's standard functions
         to compute various metrics.
@@ -129,6 +129,45 @@ def unflatten_list(xs_flat, xs_lengths):
         xs_unflat.append(xs_flat[start:end])
         start = end
     return xs_unflat
+
+
+def align_lists(labels, predictions, padding_tag=None):
+    """ Tokenizers paired with BERT-like transformer based NERs break up 
+        tokens into word-pieces in order to minimize or eliminate [UNK] 
+        situations. However, these word-pieces count to the max_sequence_length
+        specified in the NER, which may mean that predictions will have
+        fewer tags than labels because the last few tokens in the tokenized
+        input string have been cut off. This function will align the
+        label and prediction lists by removing these tags from the labels.
+
+        Parameters
+        ----------
+        labels : list(list(str))
+            list of list of label tags
+        predictions : list(list(str))
+            list of list of prediction tags
+        padding_tag : str, default None 
+            special token (not part of label set) to denote padding tag.
+
+        Returns
+        -------
+        labels, predictions : labels list aligned to predictions
+    """
+    if len(labels) != len(predictions):
+        raise ValueError("Number of tag lists (for sentences) in label and prediction must match.")
+
+    labels_a, predictions_a = [], []
+    for tags_l, tags_p in zip(labels, predictions):
+        if len(tags_l) != len(tags_p):
+            if padding_tag is not None:
+                tags_p = [t for t in tags_p if t != padding_tag]
+            labels_a.append(tags_l[0:len(tags_p)])
+            predictions_a.append(tags_p)
+        else:
+            labels_a.append(tags_l)
+            predictions_a.append(tags_p)
+
+    return labels_a, predictions_a
 
 
 def tokens_to_spans(tokens, tags, allow_multiword_spans=True):
