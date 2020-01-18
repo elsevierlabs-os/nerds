@@ -119,6 +119,23 @@ weighted avg       0.80      0.73      0.76     19392
 
 ```
 
+### Transformer NER (lang_model_family="bert", lang_model_name="bert-base-cased", max_sequence_length=128, batch_size=32, max_iter=4, learning_rate=4e-5, padding_tag="O", random_state=42)
+
+```
+              precision    recall  f1-score   support
+
+   cell_line       0.80      0.60      0.68      1977
+   cell_type       0.75      0.89      0.81      4161
+     protein       0.88      0.81      0.84     10700
+         DNA       0.84      0.82      0.83      2912
+         RNA       0.85      0.79      0.82       325
+
+   micro avg       0.83      0.81      0.82     20075
+   macro avg       0.82      0.78      0.80     20075
+weighted avg       0.84      0.81      0.82     20075
+
+```
+
 ### Majority voting ensemble (pre-trained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
 
 ```

@@ -144,6 +144,26 @@ weighted avg       0.86      0.84      0.85     48418
 
 ```
 
+### Transformer NER (lang_model_family="bert", lang_model_name="bert-base-cased", max_sequence_length=128, batch_size=32, max_iter=4, learning_rate=4e-5, padding_tag="O", random_state=42)
+
+```
+              precision    recall  f1-score   support
+
+         art       0.11      0.24      0.15        97
+         eve       0.41      0.55      0.47       126
+         geo       0.90      0.88      0.89     14016
+         gpe       0.94      0.96      0.95      4724
+         nat       0.34      0.80      0.48        40
+         org       0.80      0.81      0.81     10669
+         per       0.91      0.90      0.90     10402
+         tim       0.89      0.93      0.91      7739
+
+   micro avg       0.87      0.88      0.88     47813
+   macro avg       0.66      0.76      0.69     47813
+weighted avg       0.88      0.88      0.88     47813
+
+```
+
 ### Majority voting ensemble (pretrained Dictionary NER, CRF NER, SpaCy NER, and BiLSTM-CRF NER)
 
 ```
