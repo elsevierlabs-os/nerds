@@ -23,7 +23,9 @@ setup(
         'spacy',
         'tensorflow',
 	'torch',
-        'transformers'
+        'transformers',
+        'pandas',
+        'simpletransformers'
     ],
     tests_require=[
         'coverage',
