@@ -8,7 +8,8 @@ from sklearn.utils import shuffle
 
 from nerds.models import (
     DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, 
-    ElmoNER, FlairNER, BertNER, EnsembleNER
+    ElmoNER, FlairNER, BertNER, TransformerNER, 
+    EnsembleNER
 )
 from nerds.utils import *
 
@@ -45,7 +46,7 @@ if not os.path.exists("models"):
     os.makedirs("models")
 
 # read IOB file 
-data, labels = load_data_and_labels("train.iob")
+data, labels = load_data_and_labels("train.iob", encoding="iso-8859-1")
 # optional: restrict dataset to 5000 sentences
 # data_s, labels_s = shuffle(data, labels, random_state=42)
 # data = data_s
@@ -119,11 +120,25 @@ print(classification_report(flatten_list(ytest, strip_prefix=True),
                             labels=entity_labels))
 
 # train and test the BERT NER
-model = BertNER()
+model = BertNER(padding_tag="X")
 model.fit(xtrain, ytrain)
 model.save("models/bert_model")
 trained_model = model.load("models/bert_model")
 ypred = trained_model.predict(xtest)
+ytest, ypred = align_labels_and_predictions(ypred, ytest, padding_tag="X")
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
+
+# train and test Transformer NER
+model = TransformerNER(
+    model_dir="models/transformer_model",
+    padding_tag="X")
+model.fit(xtrain, ytrain)
+model.save()
+trained_model = model.load()
+ypred = trained_model.predict(xtest)
+ytest, ypred = align_labels_and_predictions(ypred, ytest, padding_tag="X")
 print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),
                             labels=entity_labels))

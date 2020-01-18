@@ -7,7 +7,8 @@ from sklearn.utils import shuffle
 
 from nerds.models import (
     DictionaryNER, SpacyNER, CrfNER, BiLstmCrfNER, 
-    ElmoNER, FlairNER, BertNER, EnsembleNER
+    ElmoNER, FlairNER, BertNER, TransformerNER,
+    EnsembleNER
 )
 from nerds.utils import *
 
@@ -85,11 +86,25 @@ print(classification_report(flatten_list(ytest, strip_prefix=True),
                             labels=entity_labels))
 
 # train and test the BERT NER
-model = BertNER(max_sequence_length=256)
+model = BertNER(padding_tag="X")
 model.fit(xtrain, ytrain)
-model.save("models/bert_ner")
-trained_model = model.load("models/bert_ner")
+model.save("models/bert_model")
+trained_model = model.load("models/bert_model")
 ypred = trained_model.predict(xtest)
+ytest, ypred = align_labels_and_predictions(ypred, ytest, padding_tag="X")
+print(classification_report(flatten_list(ytest, strip_prefix=True),
+                            flatten_list(ypred, strip_prefix=True),
+                            labels=entity_labels))
+
+# train and test the Transformers NER
+model = TransformerNER(
+    model_dir="models/transformer_model",
+    padding_tag="X")
+model.fit(xtrain, ytrain)
+model.save()
+trained_model = model.load()
+ypred = trained_model.predict(xtest)
+ytest, ypred = align_labels_and_predictions(ypred, ytest, padding_tag="X")
 print(classification_report(flatten_list(ytest, strip_prefix=True),
                             flatten_list(ypred, strip_prefix=True),
                             labels=entity_labels))
