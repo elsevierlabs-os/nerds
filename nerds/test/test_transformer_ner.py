@@ -19,4 +19,4 @@ def test_bert_ner():
     y_pred = model_r.predict(X)
     assert_equal(len(y), len(y_pred), "Number of labels and predictions must be equal")
     assert_equal(len(y[0]), len(y_pred[0]), "Size of first Label and prediction must be equal")
-    # shutil.rmtree("nerds/test/data/models")
+    shutil.rmtree("nerds/test/data/models")
