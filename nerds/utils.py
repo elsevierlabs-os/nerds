@@ -39,6 +39,14 @@ def load_data_and_labels(filepath, encoding="utf-8"):
     return anago.utils.load_data_and_labels(filepath, encoding)
 
 
+def get_labels_from_data(labels, strip_prefix=False):
+    unique_labels = list(set([tag for tags in labels for tag in tags]))
+    if strip_prefix:
+        unique_labels = list(set([t.split("-")[1] 
+            if t != "O" else t for t in unique_labels]))
+    return sorted(unique_labels)
+
+
 def write_param_file(param_dict, param_filepath):
     """ Write configured model hyperparameters to file for documentation.
 
@@ -131,7 +139,7 @@ def unflatten_list(xs_flat, xs_lengths):
     return xs_unflat
 
 
-def align_lists(labels, predictions, padding_tag=None):
+def align_labels_and_predictions(labels, predictions, padding_tag=None):
     """ Tokenizers paired with BERT-like transformer based NERs break up 
         tokens into word-pieces in order to minimize or eliminate [UNK] 
         situations. However, these word-pieces count to the max_sequence_length
@@ -158,14 +166,21 @@ def align_lists(labels, predictions, padding_tag=None):
 
     labels_a, predictions_a = [], []
     for tags_l, tags_p in zip(labels, predictions):
-        if len(tags_l) != len(tags_p):
-            if padding_tag is not None:
-                tags_p = [t for t in tags_p if t != padding_tag]
-            labels_a.append(tags_l[0:len(tags_p)])
-            predictions_a.append(tags_p)
-        else:
+        if padding_tag is not None:
+            assert(len(tags_l) == len(tags_p))
+            tags_lp = [(l, p) for l, p in zip(tags_l, tags_p) 
+                if p != padding_tag]
+            tags_l = [l for (l, p) in tags_lp]
+            tags_p = [p for (l, p) in tags_lp]
             labels_a.append(tags_l)
             predictions_a.append(tags_p)
+        else:
+            if len(tags_l) != len(tags_p):
+                labels_a.append(tags_l[0:len(tags_p)])
+                predictions_a.append(tags_p)
+            else:
+                labels_a.append(tags_l)
+                predictions_a.append(tags_p)
 
     return labels_a, predictions_a
 

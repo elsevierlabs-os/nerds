@@ -18,6 +18,14 @@ def test_load_data_and_labels():
     assert_equal(len(X[0]), len(y[0]), "Number of tokens should be equal to number of tags")
 
 
+def test_get_labels_from_data():
+    X, y = load_data_and_labels("nerds/test/data/example.iob")
+    raw_labels = get_labels_from_data(y)
+    assert_equal(8, len(raw_labels), "There should be 8 unique raw labels")
+    class_labels = get_labels_from_data(y, strip_prefix=True)
+    assert_equal(5, len(class_labels), "There should be 5 unique class labels")
+
+
 def test_write_param_file():
     model = CrfNER()
     param_filepath = "nerds/test/data/crf_params.yaml"
@@ -102,20 +110,22 @@ def test_spans_to_tokens_no_multiword_spans():
         assert_equal(ref_pred, pred, "Tags do not match. {:s} != {:s}".format(ref_pred, pred))
 
 
-def align_lists_padded():
-    labels = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
-    preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'X', 'X', 'X', 'X']
-    assert_equal(len(labels), len(preds))
-    labels_a, preds_a = align_lists(labels, preds, padding_tag="X")
-    assert_equal(len(labels_a), len(preds_a))
-    assert_equal(len(labels_a), len(labels) - 4)
+def test_align_labels_and_predictions_with_padding():
+    labels = [['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']]
+    preds = [['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'X', 'X', 'X', 'X']]
+    assert_equal(len(labels[0]), len(preds[0]), "Label and Prediction should have same number of tags")
+    labels_a, preds_a = align_labels_and_predictions(labels, preds, padding_tag="X")
+    print(">>>>", len(labels[0]), len(preds[0]), len(labels_a[0]), len(preds_a[0]))
+    assert_equal(len(labels_a[0]), len(preds_a[0]), "After padded alignment, Label and Prediction should have same number of tags")
+    assert_equal(len(labels_a[0]), len(labels[0]) - 4, "After padded alignment, labels should be shorter than before.")
+    assert_equal(len(preds_a[0]), len(preds[0]) - 4, "After padded alignment, predictions should be shorter than before.")
 
 
-def align_lists_unpadded():
-    labels = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']
-    preds = ['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O']
-    assert_true(len(labels) > len(preds))
-    labels_a, preds_a = align_lists(labels, preds)
-    assert_equal(len(labels_a), len(preds_a))
-    assert_equal(len(preds_a), len(preds))
-    assert_equal(len(labels_a), len(labels) - 4)
+def test_align_labels_and_predictions_without_padding():
+    labels = [['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-NORP', 'O', 'O', 'O']]
+    preds = [['B-PER', 'I-PER', 'I-PER', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O']]
+    assert_true(len(labels[0]) > len(preds[0]), "Label and Prediction should have same number of tags")
+    labels_a, preds_a = align_labels_and_predictions(labels, preds)
+    assert_equal(len(labels_a[0]), len(preds_a[0]), "After unpadded alignment, Label and Prediction should have same number of tags")
+    assert_equal(len(preds_a[0]), len(preds[0]), "After unpadded alignment, number of prediction tags should be unchanged.")
+    assert_equal(len(labels_a[0]), len(labels[0]) - 4, "After unpadded alignment, labels should be shorter.")

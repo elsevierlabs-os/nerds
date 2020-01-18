@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from nose.tools import assert_equal, assert_true
 
 from nerds.models import ElmoNER
