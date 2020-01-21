@@ -27,8 +27,10 @@
       * does not give timestep size errors
   * ElmoNER
     * New, available in Anago DEV repo, same API as Anago's BiLSTMCRF
-  * FLAIR based NER
+  * FlairNER
     * New, incorporated from the [Zalando Flair project](https://github.com/flairNLP/flair).
+  * TransformerNER
+    * New, provides support for transformer based NERs using choice of BERT, RoBERTa, DistilBERT, CamemBERT, and XLM-RoBERTa language models, uses the [SimpleTransformers library](https://pypi.org/project/simpletransformers/).
   * EnsembleNER
     * simpler interface 
     * weights from each classifier
@@ -46,5 +48,4 @@
 
 ## Planned
 
-* BERT Transformer based NER
 
