@@ -132,24 +132,20 @@ class TransformerNER(NERModel):
         if self.model_ is None:
             raise ValueError("No model found, either run fit() to train or load() to load a trained model.")
 
-        predictions = []
-        num_batches = (len(X) // self.batch_size) + 1
-        for bid in range(num_batches):
-            b_start = bid * self.batch_size
-            b_end = min(b_start + self.batch_size, len(X))
-            b_data = X[b_start : b_end]
-            b_preds, _ = self.model_.predict([" ".join(toks) for toks in b_data])
-            # predictions are list of {token:tag} dicts
-            for i, b_pred in enumerate(b_preds):
-                prediction = flatten_list(
-                    [[v for k, v in d.items()] for d in b_pred],
-                    strip_prefix=False)
-                if len(prediction) < len(b_data[i]):
-                    prediction.extend(
-                        [self.padding_tag] * (len(b_data[i]) - len(prediction)))
-                predictions.append(prediction)
-
-        return predictions
+        predictions, _ = self.model_.predict([" ".join(toks) for toks in X])
+        # predictions are list of {token:tag} dicts
+        predictions = [[tag for token_tag_dict in prediction 
+                            for (token, tag) in token_tag_dict.items()] 
+                            for prediction in predictions]
+        # handle possible truncation of prediction (and subsequent mismatch
+        # with labels) because of too long token list.
+        predictions_a = []
+        for prediction, tokens in zip(predictions, X):
+            if len(prediction) < len(tokens):
+                prediction.extend(
+                    [self.padding_tag] * (len(tokens) - len(prediction)))
+            predictions_a.append(prediction)
+        return predictions_a
 
 
     def save(self, dirpath=None):
