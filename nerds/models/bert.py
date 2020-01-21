@@ -36,6 +36,12 @@ class BertNER(NERModel):
             and a Fine tuning model for NER is provided by the HuggingFace 
             transformers library.
 
+            NOTE: this is an experimental NER that did not perform very well, and
+            is only here for reference purposes. It has been superseded by the
+            TransformerNER model, which offers the same functionality (and improved
+            performance) not only with BERT as the underlying language model (as this 
+            one does), but allows other BERT-like language model backends as well.
+
             Parameters
             ----------
             lang_model : str, optional, default "bert-base-cased"
@@ -403,28 +409,27 @@ class BertNER(NERModel):
             tokens_sent = tokens_sent[0:self.max_sequence_length - 2]
             tags_sent = tags_sent[0:self.max_sequence_length - 2]
             
+            # prepend [CLS] and append [SEP]
+            tokens_sent = [self.tokenizer_.cls_token] + tokens_sent + [self.tokenizer_.sep_token]
+            tags_sent = [self._pad_label_id] + tags_sent + [self._pad_label_id]
+
             # pad upto the max_sequence_length - 2 (account for special tokens CLS and SEP)
-            tokens_to_pad = self.max_sequence_length - (len(tokens_sent) + 2)
+            tokens_to_pad = self.max_sequence_length - len(tokens_sent)
             tokens_sent.extend([self.tokenizer_.pad_token] * tokens_to_pad)
             tags_sent.extend([self._pad_label_id] * tokens_to_pad)
             
-            # add in [CLS] and [SEP] for tags_sent and tokens_sent
-            input_tokens = self.tokenizer_.build_inputs_with_special_tokens(tokens_sent)
-            input_tags = [self._pad_label_id] + tags_sent + [self._pad_label_id]
-
             # feature: input_ids
-            input_ids.append(self.tokenizer_.convert_tokens_to_ids(input_tokens))
+            input_ids.append(self.tokenizer_.convert_tokens_to_ids(tokens_sent))
             # feature: attention_mask
-            attention_mask.append([0 if t == self.tokenizer_.pad_token else 1 for t in input_tokens])
+            attention_mask.append([0 if t == self.tokenizer_.pad_token else 1 for t in tokens_sent])
             # feature: token_type_ids
-            token_type_ids.append(
-                self.tokenizer_.create_token_type_ids_from_sequences(tokens_sent))
+            token_type_ids.append([0] * self.max_sequence_length)
             # feature: label_ids
-            label_ids.append(input_tags)
+            label_ids.append(tags_sent)
 
             if self.verbose and i < 5:
                 log.info("row[{:d}].features:".format(i))
-                log.info("  input_tokens:", input_tokens)
+                log.info("  input_tokens:", tokens_sent)
                 log.info("  input_ids:", input_ids[i])
                 log.info("  attention_mask:", attention_mask[i])
                 log.info("  token_type_ids:", token_type_ids[i])
