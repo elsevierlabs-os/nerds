@@ -4,14 +4,15 @@ setup(
     name="nerds",
     author="Elsevier Content & Innovation",
     install_requires=[
-        'anago',
+        'allennlp',
+        'anago @ git+https://github.com/Hironsan/anago.git',
+        'flair',
         'future',
         'h5py',
         'hyperopt',
         'joblib',
         'keras',
         'networkx==1.11',
-        'nltk',
         'numpy',
         'pyahocorasick',
         'pyyaml',
@@ -19,8 +20,12 @@ setup(
         'scipy',
         'sklearn',
         'sklearn-crfsuite',
-        'spacy==2.0.11',
-        'tensorflow'
+        'spacy',
+        'tensorflow',
+	'torch',
+        'transformers',
+        'pandas',
+        'simpletransformers'
     ],
     tests_require=[
         'coverage',

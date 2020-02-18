@@ -1,0 +1,2 @@
+HUMARA loci	DNA
+purified eosinophils	cell-type
